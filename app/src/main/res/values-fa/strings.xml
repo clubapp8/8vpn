@@ -184,4 +184,11 @@
     <string name="bridge_paste_empty">چیزی شبیه بریج در کلیپ‌بورد نیست. در ربات روی متن بریج بزنید تا کپی شود و برگردید.</string>
     <string name="bridge_pasted">%1$d بریج اضافه شد.</string>
     <string name="bridge_bot_failed">تلگرام باز نشد. خودتان t.me/GetBridgesBot را باز کنید.</string>
+    <string name="share_all">اشتراک همه‌چیز روی یک آدرس (SOCKS5 + HTTP، خروجی نهایی)</string>
+    <string name="share_all_port">پورت اشتراکی</string>
+    <string name="share_all_addr">آدرس شنود اشتراکی</string>
+    <string name="share_all_note">یک آدرس و یک پورت برای SOCKS5 و HTTP با هم. همیشه خروجی نهایی حالت متصل‌شده رو می‌ده: Aether، Aether → Psiphon، Aether → Tor، فقط Psiphon یا فقط Tor. تو لپ‌تاپ پروکسی SOCKS5 یا HTTP رو روی همین آدرس بذارید. در اتصال بعدی اعمال می‌شه.</string>
+    <string name="addr_all_local">SOCKS5 + HTTP · همین گوشی</string>
+    <string name="addr_all_lan">SOCKS5 + HTTP · بقیه دستگاه‌ها (%1$s)</string>
+    <string name="share_all_failed">پورت اشتراکی باز نشد: %1$s</string>
 </resources>

@@ -308,7 +308,7 @@ fun HomeScreen(openSettings: () -> Unit, openLogs: () -> Unit) {
             }
         }
         // Addresses for other devices (hotspot / USB / Wi-Fi), shown as soon as sharing is on, at the bottom under the log
-        if (s.socksShare || s.httpShare) {
+        if (s.socksShare || s.httpShare || s.shareAll) {
             Spacer(Modifier.height(12.dp))
             ShareBox(s, st.phase)
         }

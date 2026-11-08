@@ -77,6 +77,9 @@ data class Settings(
     val socksHost: String = "0.0.0.0",
     val httpShare: Boolean = false,  // HTTP proxy listens on httpHost instead of 127.0.0.1 only
     val httpHost: String = "0.0.0.0",
+    val shareAll: Boolean = false,   // one address + port (SOCKS5 and HTTP together) carrying the final output of the current mode
+    val shareAllHost: String = "0.0.0.0",
+    val shareAllPort: Int = 1830,
     val splitMode: String = "off",
     val splitApps: Set<String> = emptySet(),
 )
@@ -210,7 +213,9 @@ object SettingsStore {
         val socks = if (s.socksPort in 1024..65535 && s.socksPort != TOR_PORT && s.socksPort != PSIPHON_PORT) s.socksPort else 1819
         var http = if (s.httpPort in 1024..65535 && s.httpPort != TOR_PORT && s.httpPort != PSIPHON_PORT) s.httpPort else 1822
         if (http == socks) http = if (socks == 1822) 1823 else 1822
-        return s.copy(socksPort = socks, httpPort = http)
+        var all = if (s.shareAllPort in 1024..65535 && s.shareAllPort != TOR_PORT && s.shareAllPort != PSIPHON_PORT) s.shareAllPort else 1830
+        if (all == socks || all == http) all = listOf(1830, 1831, 1832, 1833).first { it != socks && it != http }
+        return s.copy(socksPort = socks, httpPort = http, shareAllPort = all)
     }
 
     private fun load(): Settings {
@@ -257,6 +262,9 @@ object SettingsStore {
             socksHost = str("socksHost", d.socksHost),
             httpShare = prefs.getBoolean("httpShare", prefs.getBoolean("lanShare", d.httpShare)),
             httpHost = str("httpHost", d.httpHost),
+            shareAll = prefs.getBoolean("shareAll", d.shareAll),
+            shareAllHost = str("shareAllHost", d.shareAllHost),
+            shareAllPort = prefs.getInt("shareAllPort", d.shareAllPort),
             splitMode = str("splitMode", d.splitMode),
             splitApps = prefs.getStringSet("splitApps", emptySet()) ?: emptySet(),
         )
@@ -283,6 +291,7 @@ object SettingsStore {
             .putBoolean("httpEnabled", s.httpEnabled).putInt("httpPort", s.httpPort)
             .putBoolean("socksShare", s.socksShare).putString("socksHost", s.socksHost)
             .putBoolean("httpShare", s.httpShare).putString("httpHost", s.httpHost)
+            .putBoolean("shareAll", s.shareAll).putString("shareAllHost", s.shareAllHost).putInt("shareAllPort", s.shareAllPort)
             .putString("splitMode", s.splitMode).putStringSet("splitApps", HashSet(s.splitApps))
             .apply()
     }

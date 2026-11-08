@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
@@ -443,13 +444,22 @@ fun SwitchRow(title: String, checked: Boolean, onChange: (Boolean) -> Unit) {
 }
 
 @Composable
-fun TextRow(title: String, value: String, hint: String = "", singleLine: Boolean = true, isError: Boolean = false, onChange: (String) -> Unit) {
+fun TextRow(
+    title: String, value: String, hint: String = "", singleLine: Boolean = true, isError: Boolean = false,
+    minHeight: androidx.compose.ui.unit.Dp = androidx.compose.ui.unit.Dp.Unspecified,
+    maxHeight: androidx.compose.ui.unit.Dp = androidx.compose.ui.unit.Dp.Unspecified,
+    onChange: (String) -> Unit
+) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Label(title)
+        // With a max height the box stops growing and scrolls inside itself, so a long list never pushes the rest of the page away.
+        val size = if (maxHeight != androidx.compose.ui.unit.Dp.Unspecified)
+            Modifier.heightIn(min = if (minHeight != androidx.compose.ui.unit.Dp.Unspecified) minHeight else 0.dp, max = maxHeight)
+        else Modifier
         OutlinedTextField(
             value = value, onValueChange = onChange, singleLine = singleLine, isError = isError,
             shape = RoundedCornerShape(14.dp), colors = fieldColors(),
-            placeholder = { if (hint.isNotEmpty()) Text(hint) }, modifier = Modifier.fillMaxWidth()
+            placeholder = { if (hint.isNotEmpty()) Text(hint) }, modifier = Modifier.fillMaxWidth().then(size)
         )
     }
 }
@@ -476,10 +486,10 @@ fun NumberRow(title: String, value: Int, onChange: (Int) -> Unit) {
  * port, so a half-typed number never gets rewritten under the user's fingers.
  */
 @Composable
-fun PortRow(title: String, value: Int, otherPort: Int, errorText: String, onValid: (Int) -> Unit) {
+fun PortRow(title: String, value: Int, otherPort: Int, errorText: String, otherPort2: Int = -1, onValid: (Int) -> Unit) {
     var t by remember { mutableStateOf(value.toString()) }
     val n = t.toIntOrNull()
-    val bad = n == null || n !in 1024..65535 || n == TOR_PORT || n == PSIPHON_PORT || n == otherPort
+    val bad = n == null || n !in 1024..65535 || n == TOR_PORT || n == PSIPHON_PORT || n == otherPort || n == otherPort2
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Label(title)
         OutlinedTextField(
@@ -487,7 +497,7 @@ fun PortRow(title: String, value: Int, otherPort: Int, errorText: String, onVali
             onValueChange = { v ->
                 t = v.filter { it.isDigit() }.take(5)
                 val x = t.toIntOrNull()
-                if (x != null && x in 1024..65535 && x != TOR_PORT && x != PSIPHON_PORT && x != otherPort) onValid(x)
+                if (x != null && x in 1024..65535 && x != TOR_PORT && x != PSIPHON_PORT && x != otherPort && x != otherPort2) onValid(x)
             },
             isError = bad,
             supportingText = if (bad) ({ Text(errorText) }) else null,

@@ -243,8 +243,20 @@ fun SettingsScreen(
                 // Every address and port, live: shown as soon as sharing is switched on, before any device connects
                 ShareBox(s, st.phase)
 
+                // One address + port for SOCKS5 and HTTP that always carries the final output of the current mode
+                SwitchRow(stringResource(R.string.share_all), s.shareAll) { v -> up { it.copy(shareAll = v) } }
+                if (s.shareAll) {
+                    PortRow(
+                        stringResource(R.string.share_all_port), s.shareAllPort, s.socksPort, stringResource(R.string.port_invalid),
+                        otherPort2 = if (s.httpActive) s.httpPort else -1
+                    ) { v -> up { it.copy(shareAllPort = v) } }
+                    TextRow(stringResource(R.string.share_all_addr), s.shareAllHost, "0.0.0.0", isError = !Hosts.valid(s.shareAllHost)) { v -> up { it.copy(shareAllHost = v.trim()) } }
+                    if (!Hosts.valid(s.shareAllHost)) Hint(stringResource(R.string.addr_invalid), error = true)
+                    Hint(stringResource(R.string.share_all_note))
+                }
+
                 // SOCKS5 (always running: the app itself uses it)
-                PortRow(stringResource(R.string.socks_port), s.socksPort, if (s.httpActive) s.httpPort else -1, stringResource(R.string.port_invalid)) { v -> up { it.copy(socksPort = v) } }
+                PortRow(stringResource(R.string.socks_port), s.socksPort, if (s.httpActive) s.httpPort else -1, stringResource(R.string.port_invalid), otherPort2 = if (s.shareAll) s.shareAllPort else -1) { v -> up { it.copy(socksPort = v) } }
                 SwitchRow(stringResource(R.string.socks_share), s.socksShare) { v -> up { it.copy(socksShare = v) } }
                 if (s.socksShare) {
                     TextRow(stringResource(R.string.socks_addr), s.socksHost, "0.0.0.0", isError = !Hosts.valid(s.socksHost)) { v -> up { it.copy(socksHost = v.trim()) } }
@@ -255,14 +267,14 @@ fun SettingsScreen(
                 SwitchRow(stringResource(R.string.http_proxy), s.httpEnabled) { v -> up { it.copy(httpEnabled = v) } }
                 SwitchRow(stringResource(R.string.http_share), s.httpShare) { v -> up { it.copy(httpShare = v) } }
                 if (s.httpActive) {
-                    PortRow(stringResource(R.string.http_port), s.httpPort, s.socksPort, stringResource(R.string.port_invalid)) { v -> up { it.copy(httpPort = v) } }
+                    PortRow(stringResource(R.string.http_port), s.httpPort, s.socksPort, stringResource(R.string.port_invalid), otherPort2 = if (s.shareAll) s.shareAllPort else -1) { v -> up { it.copy(httpPort = v) } }
                 }
                 if (s.httpShare) {
                     TextRow(stringResource(R.string.http_addr), s.httpHost, "0.0.0.0", isError = !Hosts.valid(s.httpHost)) { v -> up { it.copy(httpHost = v.trim()) } }
                     if (!Hosts.valid(s.httpHost)) Hint(stringResource(R.string.addr_invalid), error = true)
                 }
 
-                if (s.socksShare || s.httpShare) {
+                if (s.socksShare || s.httpShare || s.shareAll) {
                     Hint(stringResource(R.string.lan_howto))
                     Hint(stringResource(R.string.lan_warn), error = true)
                 }
@@ -369,10 +381,21 @@ fun ShareBox(s: Settings, phase: Phase) {
     val socksT = if (s.socksShare) LanShare.targets(Hosts.clean(s.socksHost), lan) else emptyList()
     val httpT = if (s.httpShare) LanShare.targets(Hosts.clean(s.httpHost), lan) else emptyList()
     // No hotspot / tethering address yet: show the ports on the usual default addresses instead of an empty box.
-    val noIpYet = (s.socksShare && socksAll && socksT.isEmpty()) || (s.httpShare && httpAll && httpT.isEmpty())
+    val allAll = Hosts.clean(s.shareAllHost) == "0.0.0.0"
+    val allT = if (s.shareAll) LanShare.targets(Hosts.clean(s.shareAllHost), lan) else emptyList()
+    val noIpYet = (s.socksShare && socksAll && socksT.isEmpty()) || (s.httpShare && httpAll && httpT.isEmpty()) ||
+        (s.shareAll && allAll && allT.isEmpty())
     val guess = stringResource(R.string.addr_guess)
 
     val lines = buildList {
+        // The one shared address: SOCKS5 and HTTP on the same port, carrying the final output of the current mode
+        if (s.shareAll) {
+            if (allAll || Hosts.clean(s.shareAllHost) == "127.0.0.1") add(stringResource(R.string.addr_all_local) to "127.0.0.1:${s.shareAllPort}")
+            for (a in allT) add(stringResource(R.string.addr_all_lan, LanShare.kind(a.iface)) to "${a.ip}:${s.shareAllPort}")
+            if (allAll && allT.isEmpty()) {
+                for (g in LanShare.guesses) add(stringResource(R.string.addr_all_lan, LanShare.kind(g.iface)) + " · " + guess to "${g.ip}:${s.shareAllPort}")
+            }
+        }
         if (socksLocalOk) add(stringResource(R.string.addr_socks_local) to "127.0.0.1:$exitPort")
         if (httpLocalOk) add(stringResource(R.string.addr_http_local) to "127.0.0.1:${s.httpPort}")
         for (a in socksT) add(stringResource(R.string.addr_socks_lan, LanShare.kind(a.iface)) to "${a.ip}:$exitPort")
@@ -416,7 +439,8 @@ fun BridgeEditor(s: Settings, enabled: Boolean = true) {
     val bad = all.filterNot { TorBridges.usable(it) }
     TextRow(
         stringResource(R.string.bridges_custom_title), s.torCustomBridges,
-        stringResource(R.string.bridges_custom_hint), singleLine = false, isError = bad.isNotEmpty() || all.isEmpty()
+        stringResource(R.string.bridges_custom_hint), singleLine = false, isError = bad.isNotEmpty() || all.isEmpty(),
+        minHeight = 120.dp, maxHeight = 200.dp
     ) { v -> if (enabled) up { it.copy(torCustomBridges = v) } }
     androidx.compose.foundation.layout.Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
         TonalPill(Ico.SEND, stringResource(R.string.bridge_get_bot), enabled = true) { openBridgeBot(ctx) }

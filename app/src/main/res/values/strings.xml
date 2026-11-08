@@ -189,4 +189,11 @@
     <string name="bridge_paste_empty">The clipboard has no bridge lines. In the bot, tap the bridge text to copy it, then come back.</string>
     <string name="bridge_pasted">%1$d bridge line(s) added.</string>
     <string name="bridge_bot_failed">Could not open Telegram. Open t.me/GetBridgesBot yourself.</string>
+    <string name="share_all">Share everything on one address (SOCKS5 + HTTP, final output)</string>
+    <string name="share_all_port">Shared port</string>
+    <string name="share_all_addr">Shared listen address</string>
+    <string name="share_all_note">One address and one port for SOCKS5 and HTTP together. It always carries the final output of the connected mode: Aether, Aether → Psiphon, Aether → Tor, Psiphon only or Tor only. On the laptop set a SOCKS5 or an HTTP proxy to this address. Applies on the next connection.</string>
+    <string name="addr_all_local">SOCKS5 + HTTP · this phone</string>
+    <string name="addr_all_lan">SOCKS5 + HTTP · other devices (%1$s)</string>
+    <string name="share_all_failed">Could not open the shared port: %1$s</string>
 </resources>

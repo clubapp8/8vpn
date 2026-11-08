@@ -214,6 +214,16 @@ class TunnelService : VpnService() {
             finish(getString(R.string.port_busy, busy))
             return
         }
+        // One address + port that shares the final output of the current mode (Aether / Psiphon / Tor) with other devices.
+        if (s.shareAll) {
+            val err = withContext(Dispatchers.IO) {
+                ShareGateway.start(Hosts.clean(s.shareAllHost), s.shareAllPort, LocalHost.host, port)
+            }
+            if (err != null) {
+                finish(getString(R.string.share_all_failed, err))
+                return
+            }
+        }
 
         while (currentCoroutineContext().isActive) {
             val attempt = failures + 1
@@ -815,6 +825,7 @@ class TunnelService : VpnService() {
     }
 
     private fun teardownBlocking() {
+        runCatching { ShareGateway.stop() }
         unwatchNetwork()
         stopTunSide()
         core?.stop()

@@ -61,6 +61,8 @@ class MainActivity : ComponentActivity() {
 private fun Root(onLanguageChanged: () -> Unit) {
     val ctx = LocalContext.current
     var screen by rememberSaveable { mutableIntStateOf(HOME) }
+    // Where the Logs screen returns to: Settings when it was opened from there, otherwise Home.
+    var logsBack by rememberSaveable { mutableIntStateOf(HOME) }
 
     val notifLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
     LaunchedEffect(Unit) {
@@ -70,7 +72,7 @@ private fun Root(onLanguageChanged: () -> Unit) {
     }
 
     BackHandler(enabled = screen != HOME) {
-        screen = if (screen == SPLIT || screen == ABOUT) SETTINGS else HOME
+        screen = if (screen == SPLIT || screen == ABOUT) SETTINGS else if (screen == LOGS) logsBack else HOME
     }
 
     val glow = LocalExtra.current.a
@@ -86,12 +88,12 @@ private fun Root(onLanguageChanged: () -> Unit) {
                 label = "nav"
             ) { sc ->
                 when (sc) {
-                    HOME -> HomeScreen(openSettings = { screen = SETTINGS }, openLogs = { screen = LOGS })
+                    HOME -> HomeScreen(openSettings = { screen = SETTINGS }, openLogs = { logsBack = HOME; screen = LOGS })
                     SETTINGS -> SettingsScreen(
-                        back = { screen = HOME }, openLogs = { screen = LOGS }, openAbout = { screen = ABOUT },
+                        back = { screen = HOME }, openLogs = { logsBack = SETTINGS; screen = LOGS }, openAbout = { screen = ABOUT },
                         openSplit = { screen = SPLIT }, onLanguageChanged = onLanguageChanged
                     )
-                    LOGS -> LogsScreen(back = { screen = HOME })
+                    LOGS -> LogsScreen(back = { screen = logsBack })
                     ABOUT -> AboutScreen(back = { screen = SETTINGS })
                     SPLIT -> SplitScreen(back = { screen = SETTINGS })
                 }

@@ -110,7 +110,7 @@
     <string name="dns">Custom DNS (inside the tunnel)</string>
     <string name="dns_hint">1.1.1.1,1.0.0.1</string>
     <string name="socks_port">Local SOCKS5 port</string>
-    <string name="http_proxy">Local HTTP proxy</string>
+    <string name="http_proxy">HTTP proxy for this phone</string>
     <string name="http_port">HTTP proxy port</string>
     <string name="clear_cache">Clear cache and WARP identity</string>
     <string name="clear_cache_warn">This deletes the saved WARP identity and all caches. A new device will be registered on the next connection.</string>
@@ -177,4 +177,8 @@
     <string name="bridges_custom_count">%1$d bridge line(s) will be used.</string>
     <string name="bridges_custom_unsupported">%1$d line(s) use a transport this app does not include (%2$s) and will be skipped. Only obfs4, webtunnel and plain bridges work.</string>
     <string name="bridges_custom_note">Paste lines from bridges.torproject.org or the Telegram bot @GetBridgesBot. A leading "Bridge" word is optional. Changes apply on the next connection.</string>
+    <string name="addr_socks_local">SOCKS5 · this phone</string>
+    <string name="addr_http_local">HTTP · this phone</string>
+    <string name="addr_socks_lan">SOCKS5 · other devices (%1$s)</string>
+    <string name="addr_http_lan">HTTP · other devices (%1$s)</string>
 </resources>

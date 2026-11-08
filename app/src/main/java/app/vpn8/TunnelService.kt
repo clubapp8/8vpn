@@ -207,7 +207,7 @@ class TunnelService : VpnService() {
             add(s.socksPort)
             if (s.route.usesPsiphon && s.route != Route.PSIPHON_ONLY) add(PSIPHON_PORT)
             if (s.route.usesTor && s.route != Route.TOR_ONLY) add(TOR_PORT)
-            if (s.httpEnabled) add(s.httpPort)
+            if (s.httpActive) add(s.httpPort)
         }.distinct()
         val busy = withContext(Dispatchers.IO) { ports.firstOrNull { portOpen(it) } }
         if (busy != null) {
@@ -345,6 +345,11 @@ class TunnelService : VpnService() {
             else -> 300_000L
         }
         val deadline = SystemClock.elapsedRealtime() + limit
+        // Tor opens its SOCKS port at once, long before a circuit works. So for Tor routes the
+        // connection only counts as up after a real request has gone through it.
+        var torOk = !s.route.usesTor
+        var lastTorProbe = 0L
+        var torLogged = false
         while (currentCoroutineContext().isActive && SystemClock.elapsedRealtime() < deadline) {
             if (!c.alive) return false
             val waited = SystemClock.elapsedRealtime() - (deadline - limit)
@@ -356,7 +361,19 @@ class TunnelService : VpnService() {
                 // Plain Aether: the port can accept connections before the tunnel is validated, so do
                 // not bring up the VPN (or show Connected) until Aether says it is really ready.
                 (s.route != Route.AETHER || c.socksReady || waited > 90_000)
-            if (ready) return true
+            if (ready && !torOk) {
+                val now = SystemClock.elapsedRealtime()
+                if (now - lastTorProbe >= 3_000) {
+                    lastTorProbe = now
+                    if (!torLogged) { Engine.log("Waiting until Tor really carries traffic"); torLogged = true }
+                    torOk = withContext(Dispatchers.IO) {
+                        Socks.httpGet(port, "cp.cloudflare.com", "/generate_204", 15_000)
+                            ?: Socks.httpGet(port, "www.gstatic.com", "/generate_204", 15_000)
+                    } != null
+                    if (torOk) Engine.log("Tor is carrying traffic")
+                }
+            }
+            if (ready && torOk) return true
             delay(500)
         }
         return false

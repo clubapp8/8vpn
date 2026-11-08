@@ -6,6 +6,7 @@ import android.content.Context
 import android.os.Build
 import android.widget.Toast
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -26,6 +27,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.platform.LocalContext
@@ -56,6 +59,7 @@ fun SettingsScreen(
     val idle = st.phase == Phase.IDLE
 
     Page(stringResource(R.string.settings), back, actions = {
+        IconBtn(Ico.LOGS, openLogs)
         IconBtn(Ico.INFO, openAbout)
     }) {
         Column(Modifier.verticalScroll(rememberScrollState())) {
@@ -222,48 +226,52 @@ fun SettingsScreen(
 
             // ---- Share SOCKS5 / HTTP: ports, sharing and the addresses you can connect to
             val exitPort = ArgBuilder.exitPort(s)
+            val socksAll = Hosts.clean(s.socksHost) == "0.0.0.0"
+            val httpAll = Hosts.clean(s.httpHost) == "0.0.0.0"
+            // Local addresses only work when the proxy listens on this phone's loopback (not shared) or on every network.
+            val socksLocalOk = !s.socksShare || socksAll
+            val httpLocalOk = s.httpEnabled && (!s.httpShare || httpAll)
             CollapsibleGroup(
                 stringResource(R.string.sec_share), open == "share", { toggle("share") },
-                subtitle = stringResource(R.string.proxy_info, "127.0.0.1:$exitPort") +
-                    if (s.httpEnabled) "  ·  " + stringResource(R.string.http_info, "127.0.0.1:${s.httpPort}") else ""
+                subtitle = (if (socksLocalOk) stringResource(R.string.proxy_info, "127.0.0.1:$exitPort") else "SOCKS5") +
+                    if (s.httpActive) "  ·  " + stringResource(R.string.http_info, "127.0.0.1:${s.httpPort}") else ""
             ) {
-                // Current addresses and ports (tap to copy)
-                val sharingSocks = s.socksShare
-                val sharingHttp = s.httpEnabled && s.httpShare
-                val socksT = remember(s.socksShare, s.socksHost, st.phase) { if (sharingSocks) LanShare.targets(Hosts.clean(s.socksHost)) else emptyList() }
-                val httpT = remember(s.httpShare, s.httpHost, s.httpEnabled, st.phase) { if (sharingHttp) LanShare.targets(Hosts.clean(s.httpHost)) else emptyList() }
+                val socksT = remember(s.socksShare, s.socksHost, st.phase) { if (s.socksShare) LanShare.targets(Hosts.clean(s.socksHost)) else emptyList() }
+                val httpT = remember(s.httpShare, s.httpHost, st.phase) { if (s.httpShare) LanShare.targets(Hosts.clean(s.httpHost)) else emptyList() }
 
-                Field(stringResource(R.string.share_current_title)) {
-                    Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp)) {
-                        AddrLine(ctx, stringResource(R.string.proxy_info, "127.0.0.1:$exitPort"), "127.0.0.1:$exitPort")
-                        if (s.httpEnabled) AddrLine(ctx, stringResource(R.string.http_info, "127.0.0.1:${s.httpPort}"), "127.0.0.1:${s.httpPort}")
-                        for (a in socksT) AddrLine(ctx, stringResource(R.string.lan_addr, LanShare.kind(a.iface), "${a.ip}:$exitPort"), "${a.ip}:$exitPort")
-                        for (a in httpT) AddrLine(ctx, stringResource(R.string.lan_addr_http, "${a.ip}:${s.httpPort}"), "${a.ip}:${s.httpPort}")
-                    }
-                    if ((sharingSocks || sharingHttp) && socksT.isEmpty() && httpT.isEmpty()) Hint(stringResource(R.string.lan_no_ip))
-                    Hint(stringResource(if (st.phase == Phase.CONNECTED) R.string.share_active else R.string.share_inactive))
+                // All current addresses and ports in one highlighted box (tap a line to copy it)
+                val lines = buildList {
+                    if (socksLocalOk) add(stringResource(R.string.addr_socks_local) to "127.0.0.1:$exitPort")
+                    if (httpLocalOk) add(stringResource(R.string.addr_http_local) to "127.0.0.1:${s.httpPort}")
+                    for (a in socksT) add(stringResource(R.string.addr_socks_lan, LanShare.kind(a.iface)) to "${a.ip}:$exitPort")
+                    for (a in httpT) add(stringResource(R.string.addr_http_lan, LanShare.kind(a.iface)) to "${a.ip}:${s.httpPort}")
                 }
+                AddrBox(
+                    ctx, stringResource(R.string.share_current_title), lines,
+                    stringResource(if (st.phase == Phase.CONNECTED) R.string.share_active else R.string.share_inactive)
+                )
+                if ((s.socksShare || s.httpShare) && socksT.isEmpty() && httpT.isEmpty()) Hint(stringResource(R.string.lan_no_ip))
 
                 // SOCKS5 (always running: the app itself uses it)
-                PortRow(stringResource(R.string.socks_port), s.socksPort, if (s.httpEnabled) s.httpPort else -1, stringResource(R.string.port_invalid)) { v -> up { it.copy(socksPort = v) } }
+                PortRow(stringResource(R.string.socks_port), s.socksPort, if (s.httpActive) s.httpPort else -1, stringResource(R.string.port_invalid)) { v -> up { it.copy(socksPort = v) } }
                 SwitchRow(stringResource(R.string.socks_share), s.socksShare) { v -> up { it.copy(socksShare = v) } }
                 if (s.socksShare) {
                     TextRow(stringResource(R.string.socks_addr), s.socksHost, "0.0.0.0", isError = !Hosts.valid(s.socksHost)) { v -> up { it.copy(socksHost = v.trim()) } }
                     if (!Hosts.valid(s.socksHost)) Hint(stringResource(R.string.addr_invalid), error = true)
                 }
 
-                // HTTP proxy (fully on / off)
+                // HTTP proxy: "this phone" and "other devices" are two separate switches
                 SwitchRow(stringResource(R.string.http_proxy), s.httpEnabled) { v -> up { it.copy(httpEnabled = v) } }
-                if (s.httpEnabled) {
+                SwitchRow(stringResource(R.string.http_share), s.httpShare) { v -> up { it.copy(httpShare = v) } }
+                if (s.httpActive) {
                     PortRow(stringResource(R.string.http_port), s.httpPort, s.socksPort, stringResource(R.string.port_invalid)) { v -> up { it.copy(httpPort = v) } }
-                    SwitchRow(stringResource(R.string.http_share), s.httpShare) { v -> up { it.copy(httpShare = v) } }
-                    if (s.httpShare) {
-                        TextRow(stringResource(R.string.http_addr), s.httpHost, "0.0.0.0", isError = !Hosts.valid(s.httpHost)) { v -> up { it.copy(httpHost = v.trim()) } }
-                        if (!Hosts.valid(s.httpHost)) Hint(stringResource(R.string.addr_invalid), error = true)
-                    }
+                }
+                if (s.httpShare) {
+                    TextRow(stringResource(R.string.http_addr), s.httpHost, "0.0.0.0", isError = !Hosts.valid(s.httpHost)) { v -> up { it.copy(httpHost = v.trim()) } }
+                    if (!Hosts.valid(s.httpHost)) Hint(stringResource(R.string.addr_invalid), error = true)
                 }
 
-                if (sharingSocks || sharingHttp) {
+                if (s.socksShare || s.httpShare) {
                     Hint(stringResource(R.string.lan_howto))
                     Hint(stringResource(R.string.lan_warn), error = true)
                 }
@@ -318,18 +326,31 @@ fun SettingsScreen(
 }
 
 
-/** One address line in monospace; tap to copy the bare host:port. */
+/** One eye-catching box holding every address and port; tap a line to copy its host:port. */
 @Composable
-private fun AddrLine(ctx: Context, text: String, copy: String) {
+private fun AddrBox(ctx: Context, title: String, lines: List<Pair<String, String>>, status: String) {
     val c = MaterialTheme.colorScheme
-    Text(
-        text,
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(c.surfaceContainerHigh)
-            .clickable {
-                val cm = ctx.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                cm.setPrimaryClip(ClipData.newPlainText("proxy", copy))
-                Toast.makeText(ctx, ctx.getString(R.string.copied_addr, copy), Toast.LENGTH_SHORT).show()
-            }.padding(horizontal = 12.dp, vertical = 10.dp),
-        style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace
-    )
+    val shape = RoundedCornerShape(18.dp)
+    Column(
+        Modifier.fillMaxWidth().clip(shape)
+            .background(Brush.linearGradient(listOf(c.primary.copy(alpha = 0.30f), c.tertiary.copy(alpha = 0.24f))))
+            .border(1.5.dp, c.primary, shape).padding(14.dp),
+        verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp)
+    ) {
+        Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = c.primary)
+        for ((label, addr) in lines) {
+            Column(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(c.surface.copy(alpha = 0.55f))
+                    .clickable {
+                        val cm = ctx.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        cm.setPrimaryClip(ClipData.newPlainText("proxy", addr))
+                        Toast.makeText(ctx, ctx.getString(R.string.copied_addr, addr), Toast.LENGTH_SHORT).show()
+                    }.padding(horizontal = 12.dp, vertical = 9.dp)
+            ) {
+                Text(label, style = MaterialTheme.typography.labelSmall, color = c.onSurfaceVariant)
+                Text(addr, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = c.onSurface)
+            }
+        }
+        Text(status, style = MaterialTheme.typography.bodySmall, color = c.onSurface)
+    }
 }

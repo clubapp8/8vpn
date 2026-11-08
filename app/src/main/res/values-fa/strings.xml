@@ -105,7 +105,7 @@
     <string name="dns">DNS سفارشی (داخل تونل)</string>
     <string name="dns_hint">1.1.1.1,1.0.0.1</string>
     <string name="socks_port">پورت SOCKS5 محلی</string>
-    <string name="http_proxy">پروکسی HTTP محلی</string>
+    <string name="http_proxy">پروکسی HTTP برای همین گوشی</string>
     <string name="http_port">پورت پروکسی HTTP</string>
     <string name="clear_cache">پاک کردن کش و هویت WARP</string>
     <string name="clear_cache_warn">هویت WARP ذخیره‌شده و همه کش‌ها حذف می‌شوند. در اتصال بعدی یک دستگاه جدید ثبت خواهد شد.</string>
@@ -172,4 +172,8 @@
     <string name="bridges_custom_count">%1$d بریج استفاده می‌شود.</string>
     <string name="bridges_custom_unsupported">%1$d خط از ترنسپورتی استفاده می‌کند که در این برنامه نیست (%2$s) و نادیده گرفته می‌شود. فقط obfs4، webtunnel و بریج ساده کار می‌کنند.</string>
     <string name="bridges_custom_note">خطوط را از bridges.torproject.org یا ربات تلگرام @GetBridgesBot کپی کنید. کلمه‌ی Bridge در ابتدای خط اختیاری است. تغییرات در اتصال بعدی اعمال می‌شود.</string>
+    <string name="addr_socks_local">SOCKS5 · همین گوشی</string>
+    <string name="addr_http_local">HTTP · همین گوشی</string>
+    <string name="addr_socks_lan">SOCKS5 · بقیه دستگاه‌ها (%1$s)</string>
+    <string name="addr_http_lan">HTTP · بقیه دستگاه‌ها (%1$s)</string>
 </resources>

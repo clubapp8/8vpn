@@ -92,6 +92,8 @@ object Hosts {
 
 fun Settings.socksBind(): String = if (socksShare) Hosts.clean(socksHost) else "127.0.0.1"
 fun Settings.httpBind(): String = if (httpShare) Hosts.clean(httpHost) else "127.0.0.1"
+/** The HTTP proxy runs when it is switched on for this phone, for other devices, or both: the two switches are independent. */
+val Settings.httpActive: Boolean get() = httpEnabled || httpShare
 
 /** Address this app itself uses to reach its own SOCKS5 listener. */
 fun Settings.localHost(): String = socksBind().let { if (it == "0.0.0.0") "127.0.0.1" else it }

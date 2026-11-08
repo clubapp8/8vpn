@@ -21,7 +21,7 @@ object ArgBuilder {
 
         a += listOf("--config", File(dir, "aether.toml").path)
         a += listOf("--bind", "${s.socksBind()}:${s.socksPort}")
-        if (s.httpEnabled) a += listOf("--http-proxy", "${s.httpBind()}:${s.httpPort}")
+        if (s.httpActive) a += listOf("--http-proxy", "${s.httpBind()}:${s.httpPort}")
 
         when (r) {
             Route.AETHER_PSIPHON -> a += "--psiphon"

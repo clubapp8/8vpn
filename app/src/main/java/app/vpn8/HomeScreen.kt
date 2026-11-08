@@ -229,7 +229,7 @@ fun HomeScreen(openSettings: () -> Unit, openLogs: () -> Unit) {
             AppCard {
                 Text(
                     stringResource(R.string.proxy_info, "127.0.0.1:${s.socksPort}") +
-                        if (s.httpEnabled) "   " + stringResource(R.string.http_info, "127.0.0.1:${s.httpPort}") else "",
+                        if (s.httpActive) "   " + stringResource(R.string.http_info, "127.0.0.1:${s.httpPort}") else "",
                     modifier = Modifier.padding(14.dp), style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace
                 )
             }

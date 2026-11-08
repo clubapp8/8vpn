@@ -149,7 +149,7 @@
     <string name="lan_share">اجازه بده دستگاه‌های دیگه از پروکسی استفاده کنن</string>
     <string name="lan_addr">%1$s: SOCKS5 ‏%2$s</string>
     <string name="lan_addr_http">پروکسی HTTP ‏%1$s</string>
-    <string name="lan_no_ip">هنوز آدرس هات‌اسپات یا USB پیدا نشد. هات‌اسپات یا USB tethering رو روشن کن و بعد دوباره این صفحه رو باز کن.</string>
+    <string name="lan_no_ip">هنوز آدرس هات‌اسپات یا USB پیدا نشد. آدرس‌های بالا مقدارهای معمول هستند؛ هات‌اسپات یا USB tethering را روشن کنید تا آدرس واقعی خودش اینجا بیاید.</string>
     <string name="lan_howto">برای استفاده تو لپ‌تاپ: هات‌اسپات (یا USB tethering) گوشی رو روشن کن، لپ‌تاپ رو وصل کن و پروکسی لپ‌تاپ رو روی آدرس بالا بذار. 0.0.0.0 یعنی همه‌ی شبکه‌های گوشی؛ آی‌پی مشخص فقط وقتی کار می‌کنه که همون شبکه روشن باشه. تغییرها در اتصال بعدی اعمال می‌شن. SOCKS5 همیشه روشنه چون خود برنامه ازش استفاده می‌کنه؛ این سوییچ فقط تعیین می‌کنه کی بهش دسترسی داره. تو Aether → Psiphon و Aether → Tor پورت SOCKS5 قابل‌اشتراک همون پورت Psiphon (۱۸۲۱) یا Tor (۱۸۲۰) هست.</string>
     <string name="lan_warn">هر کسی روی همین هات‌اسپات یا وای‌فای باشه می‌تونه از این پروکسی استفاده کنه. رمز هات‌اسپات رو قوی بذار و بعد از کار خاموشش کن.</string>
     <string name="socks_share">اشتراک SOCKS5 با دستگاه‌های دیگه</string>
@@ -178,4 +178,10 @@
     <string name="addr_http_lan">HTTP · بقیه دستگاه‌ها (%1$s)</string>
     <string name="tile_add">افزودن دکمه به تنظیمات سریع (نوار وضعیت)</string>
     <string name="tile_add_hint">نوار وضعیت را پایین بکشید، روی آیکن مداد (ویرایش) بزنید و دکمه «8 VPN» را به بخش دکمه‌های فعال بکشید.</string>
+    <string name="addr_guess">آدرس معمول</string>
+    <string name="bridge_get_bot">گرفتن بریج (ربات تلگرام)</string>
+    <string name="bridge_paste">چسباندن بریج</string>
+    <string name="bridge_paste_empty">چیزی شبیه بریج در کلیپ‌بورد نیست. در ربات روی متن بریج بزنید تا کپی شود و برگردید.</string>
+    <string name="bridge_pasted">%1$d بریج اضافه شد.</string>
+    <string name="bridge_bot_failed">تلگرام باز نشد. خودتان t.me/GetBridgesBot را باز کنید.</string>
 </resources>

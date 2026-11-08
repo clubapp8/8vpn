@@ -23,6 +23,10 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -221,20 +225,7 @@ fun SettingsScreen(
                         s.torBridges
                     ) { v -> up { it.copy(torBridges = v) } }
                 }
-                if (s.torBridges == "custom") {
-                    val all = TorBridges.lines(s.torCustomBridges)
-                    val bad = all.filterNot { TorBridges.usable(it) }
-                    TextRow(
-                        stringResource(R.string.bridges_custom_title), s.torCustomBridges,
-                        stringResource(R.string.bridges_custom_hint), singleLine = false, isError = bad.isNotEmpty() || all.isEmpty()
-                    ) { v -> up { it.copy(torCustomBridges = v) } }
-                    when {
-                        all.isEmpty() -> Hint(stringResource(R.string.bridges_custom_empty), error = true)
-                        bad.isNotEmpty() -> Hint(stringResource(R.string.bridges_custom_unsupported, bad.size, bad.map { TorBridges.transport(it) }.distinct().joinToString(", ")), error = true)
-                        else -> Hint(stringResource(R.string.bridges_custom_count, all.size))
-                    }
-                    Hint(stringResource(R.string.bridges_custom_note))
-                }
+                if (s.torBridges == "custom") BridgeEditor(s)
             }
 
             // ---- Share SOCKS5 / HTTP: ports, sharing and the addresses you can connect to
@@ -249,21 +240,8 @@ fun SettingsScreen(
                 subtitle = (if (socksLocalOk) stringResource(R.string.proxy_info, "127.0.0.1:$exitPort") else "SOCKS5") +
                     if (s.httpActive) "  ·  " + stringResource(R.string.http_info, "127.0.0.1:${s.httpPort}") else ""
             ) {
-                val socksT = remember(s.socksShare, s.socksHost, st.phase) { if (s.socksShare) LanShare.targets(Hosts.clean(s.socksHost)) else emptyList() }
-                val httpT = remember(s.httpShare, s.httpHost, st.phase) { if (s.httpShare) LanShare.targets(Hosts.clean(s.httpHost)) else emptyList() }
-
-                // All current addresses and ports in one highlighted box (tap a line to copy it)
-                val lines = buildList {
-                    if (socksLocalOk) add(stringResource(R.string.addr_socks_local) to "127.0.0.1:$exitPort")
-                    if (httpLocalOk) add(stringResource(R.string.addr_http_local) to "127.0.0.1:${s.httpPort}")
-                    for (a in socksT) add(stringResource(R.string.addr_socks_lan, LanShare.kind(a.iface)) to "${a.ip}:$exitPort")
-                    for (a in httpT) add(stringResource(R.string.addr_http_lan, LanShare.kind(a.iface)) to "${a.ip}:${s.httpPort}")
-                }
-                AddrBox(
-                    ctx, stringResource(R.string.share_current_title), lines,
-                    stringResource(if (st.phase == Phase.CONNECTED) R.string.share_active else R.string.share_inactive)
-                )
-                if ((s.socksShare || s.httpShare) && socksT.isEmpty() && httpT.isEmpty()) Hint(stringResource(R.string.lan_no_ip))
+                // Every address and port, live: shown as soon as sharing is switched on, before any device connects
+                ShareBox(s, st.phase)
 
                 // SOCKS5 (always running: the app itself uses it)
                 PortRow(stringResource(R.string.socks_port), s.socksPort, if (s.httpActive) s.httpPort else -1, stringResource(R.string.port_invalid)) { v -> up { it.copy(socksPort = v) } }
@@ -341,7 +319,7 @@ fun SettingsScreen(
 
 /** One eye-catching box holding every address and port; tap a line to copy its host:port. */
 @Composable
-private fun AddrBox(ctx: Context, title: String, lines: List<Pair<String, String>>, status: String) {
+fun AddrBox(ctx: Context, title: String, lines: List<Pair<String, String>>, status: String) {
     val c = MaterialTheme.colorScheme
     val shape = RoundedCornerShape(18.dp)
     Column(
@@ -366,4 +344,99 @@ private fun AddrBox(ctx: Context, title: String, lines: List<Pair<String, String
         }
         Text(status, style = MaterialTheme.typography.bodySmall, color = c.onSurface)
     }
+}
+
+
+/**
+ * The box with every address you can use for SOCKS5 / HTTP: this phone, and other devices over the
+ * hotspot / USB / Wi-Fi. It refreshes every 2 s, so the hotspot address appears the moment you turn the
+ * hotspot on, and it already shows the ports while nothing is connected. Used in Settings and on Home.
+ */
+@Composable
+fun ShareBox(s: Settings, phase: Phase) {
+    val ctx = LocalContext.current
+    val exitPort = ArgBuilder.exitPort(s)
+    val socksAll = Hosts.clean(s.socksHost) == "0.0.0.0"
+    val httpAll = Hosts.clean(s.httpHost) == "0.0.0.0"
+    val socksLocalOk = !s.socksShare || socksAll
+    val httpLocalOk = s.httpEnabled && (!s.httpShare || httpAll)
+    val lan by produceState(initialValue = LanShare.addresses()) {
+        while (true) {
+            delay(2000)
+            value = withContext(Dispatchers.IO) { LanShare.addresses() }
+        }
+    }
+    val socksT = if (s.socksShare) LanShare.targets(Hosts.clean(s.socksHost), lan) else emptyList()
+    val httpT = if (s.httpShare) LanShare.targets(Hosts.clean(s.httpHost), lan) else emptyList()
+    // No hotspot / tethering address yet: show the ports on the usual default addresses instead of an empty box.
+    val noIpYet = (s.socksShare && socksAll && socksT.isEmpty()) || (s.httpShare && httpAll && httpT.isEmpty())
+    val guess = stringResource(R.string.addr_guess)
+
+    val lines = buildList {
+        if (socksLocalOk) add(stringResource(R.string.addr_socks_local) to "127.0.0.1:$exitPort")
+        if (httpLocalOk) add(stringResource(R.string.addr_http_local) to "127.0.0.1:${s.httpPort}")
+        for (a in socksT) add(stringResource(R.string.addr_socks_lan, LanShare.kind(a.iface)) to "${a.ip}:$exitPort")
+        for (a in httpT) add(stringResource(R.string.addr_http_lan, LanShare.kind(a.iface)) to "${a.ip}:${s.httpPort}")
+        if (s.socksShare && socksAll && socksT.isEmpty()) {
+            for (g in LanShare.guesses) add(stringResource(R.string.addr_socks_lan, LanShare.kind(g.iface)) + " · " + guess to "${g.ip}:$exitPort")
+        }
+        if (s.httpShare && httpAll && httpT.isEmpty()) {
+            for (g in LanShare.guesses) add(stringResource(R.string.addr_http_lan, LanShare.kind(g.iface)) + " · " + guess to "${g.ip}:${s.httpPort}")
+        }
+    }
+    AddrBox(
+        ctx, stringResource(R.string.share_current_title), lines,
+        stringResource(if (phase == Phase.CONNECTED) R.string.share_active else R.string.share_inactive)
+    )
+    if (noIpYet) Hint(stringResource(R.string.lan_no_ip))
+}
+
+/** Opens the Tor Project's Telegram bot that hands out bridges (the Telegram app if installed, else the web link). */
+fun openBridgeBot(ctx: Context) {
+    val flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+    val tg = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("tg://resolve?domain=GetBridgesBot")).addFlags(flags)
+    val web = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://t.me/GetBridgesBot")).addFlags(flags)
+    try {
+        ctx.startActivity(tg)
+    } catch (_: Exception) {
+        try { ctx.startActivity(web) } catch (_: Exception) {
+            Toast.makeText(ctx, ctx.getString(R.string.bridge_bot_failed), Toast.LENGTH_LONG).show()
+        }
+    }
+}
+
+/**
+ * Custom Tor bridges: the text box, a button that opens the Telegram bot to get bridges, and a button that
+ * pastes what you copied there. Used in Settings and on the Home screen.
+ */
+@Composable
+fun BridgeEditor(s: Settings, enabled: Boolean = true) {
+    val ctx = LocalContext.current
+    val all = TorBridges.lines(s.torCustomBridges)
+    val bad = all.filterNot { TorBridges.usable(it) }
+    TextRow(
+        stringResource(R.string.bridges_custom_title), s.torCustomBridges,
+        stringResource(R.string.bridges_custom_hint), singleLine = false, isError = bad.isNotEmpty() || all.isEmpty()
+    ) { v -> if (enabled) up { it.copy(torCustomBridges = v) } }
+    androidx.compose.foundation.layout.Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+        TonalPill(Ico.SEND, stringResource(R.string.bridge_get_bot), enabled = true) { openBridgeBot(ctx) }
+        TonalPill(Ico.COPY, stringResource(R.string.bridge_paste), enabled = enabled) {
+            val cm = ctx.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clip = cm.primaryClip?.getItemAt(0)?.coerceToText(ctx)?.toString().orEmpty()
+            val add = TorBridges.lines(clip)
+            if (add.isEmpty()) {
+                Toast.makeText(ctx, ctx.getString(R.string.bridge_paste_empty), Toast.LENGTH_SHORT).show()
+            } else {
+                val merged = (TorBridges.lines(s.torCustomBridges) + add).distinct().joinToString("\n")
+                up { it.copy(torCustomBridges = merged) }
+                Toast.makeText(ctx, ctx.getString(R.string.bridge_pasted, add.size), Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    when {
+        all.isEmpty() -> Hint(stringResource(R.string.bridges_custom_empty), error = true)
+        bad.isNotEmpty() -> Hint(stringResource(R.string.bridges_custom_unsupported, bad.size, bad.map { TorBridges.transport(it) }.distinct().joinToString(", ")), error = true)
+        else -> Hint(stringResource(R.string.bridges_custom_count, all.size))
+    }
+    Hint(stringResource(R.string.bridges_custom_note))
 }

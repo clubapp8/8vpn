@@ -1,7 +1,10 @@
 package app.vpn8
 
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import java.io.File
+import java.net.Inet4Address
 
 /** Turns the user's settings into Aether command line flags. */
 object ArgBuilder {
@@ -87,6 +90,12 @@ object ArgBuilder {
             if (r != Route.PSIPHON_ONLY) a += listOf("--psiphon-bind", "${s.socksBind()}:$PSIPHON_PORT")
             a += listOf("--psiphon-mode", s.psiphonMode)
             if (s.psiphonRegion.isNotBlank()) a += listOf("--psiphon-region", s.psiphonRegion.uppercase())
+            // Psiphon (a Go program) finds no DNS server on Android and tries 127.0.0.1:53, which
+            // is refused, so it can never download its server list. Give it real DNS servers.
+            // A --psiphon-config the user typed in the extra arguments wins.
+            if (!s.extraArgs.contains("--psiphon-config")) {
+                psiphonConfig(ctx, s, dir)?.let { a += listOf("--psiphon-config", it.path) }
+            }
         }
         if (r.usesTor) {
             a += listOf("--tor-dir", File(dir, "tor").path)
@@ -109,6 +118,41 @@ object ArgBuilder {
         if (s.perf != "auto") a += listOf("--perf", s.perf)
         a += splitArgs(s.extraArgs)
         return a
+    }
+
+    /**
+     * Writes a small Psiphon config laid over Aether's built-in one. It only sets
+     * DNSResolverAlternateServers: the phone's own DNS servers first (they work on this very
+     * network), then the user's DNS setting, then a few public resolvers.
+     */
+    private fun psiphonConfig(ctx: Context, s: Settings, dir: File): File? = try {
+        val servers = LinkedHashSet<String>()
+        servers += systemDns(ctx)
+        s.dns.split(',', ' ', ';', '\n').map { it.trim() }.filter { Hosts.valid(it) }.forEach { servers += it }
+        servers += listOf("1.1.1.1", "8.8.8.8", "9.9.9.9", "1.0.0.1", "8.8.4.4")
+        val list = servers.filter { it != "0.0.0.0" && !it.startsWith("127.") }.take(8)
+        dir.mkdirs()
+        val f = File(dir, "psiphon-config.json")
+        f.writeText("{\"DNSResolverAlternateServers\":[" + list.joinToString(",") { "\"$it\"" } + "]}\n")
+        Engine.log("Psiphon DNS servers: " + list.joinToString(", "))
+        f
+    } catch (e: Exception) {
+        Engine.log("Could not write the Psiphon DNS config: ${e.message}")
+        null
+    }
+
+    /** IPv4 DNS servers of the phone's real (non-VPN) networks, the active one first. */
+    private fun systemDns(ctx: Context): List<String> = try {
+        val cm = ctx.getSystemService(ConnectivityManager::class.java)
+        val active = cm?.activeNetwork
+        val nets = (cm?.allNetworks ?: emptyArray()).sortedByDescending { it == active }
+        nets.filter { n ->
+            cm?.getNetworkCapabilities(n)?.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN) == true
+        }.flatMap { n ->
+            cm?.getLinkProperties(n)?.dnsServers.orEmpty().filterIsInstance<Inet4Address>().mapNotNull { it.hostAddress }
+        }.distinct()
+    } catch (_: Exception) {
+        emptyList()
     }
 
     /** Splits a command line the way a shell would for simple cases: spaces separate, quotes group. */

@@ -235,6 +235,12 @@ fun HomeScreen(openSettings: () -> Unit, openLogs: () -> Unit) {
             }
         }
 
+        // Addresses for other devices (hotspot / USB / Wi-Fi), shown as soon as sharing is on, even before connecting
+        if (s.socksShare || s.httpShare) {
+            Spacer(Modifier.height(10.dp))
+            ShareBox(s, st.phase)
+        }
+
         // ---- Actions: only while connected, so there are no dead buttons
         if (live) {
             Spacer(Modifier.height(12.dp))
@@ -341,6 +347,7 @@ private fun FamilyPanel(fam: Family, s: Settings, enabled: Boolean) {
             }
             // The Psiphon region belongs to the route choice, so it opens right under it.
             if (s.route == Route.AETHER_PSIPHON) RegionButton(s, enabled) { regionDialog = true }
+            if (s.route == Route.AETHER_TOR) TorBridgePanel(s, enabled)
             Field(stringResource(R.string.protocol)) {
                 Chips(Protocol.values().map { it to it.label }, s.protocol, enabled) { v -> up { it.copy(protocol = v) } }
             }
@@ -369,19 +376,27 @@ private fun FamilyPanel(fam: Family, s: Settings, enabled: Boolean) {
                     s.route, enabled
                 ) { v -> up { it.copy(route = v) } }
             }
-            Field(stringResource(R.string.bridges)) {
-                Chips(
-                    listOf(
-                        "auto" to stringResource(R.string.bridges_auto),
-                        "always" to stringResource(R.string.bridges_always),
-                        "never" to stringResource(R.string.bridges_never)
-                    ),
-                    s.torBridges, enabled
-                ) { v -> up { it.copy(torBridges = v) } }
-            }
+            TorBridgePanel(s, enabled)
         }
     }
     if (regionDialog) RegionDialog(s.psiphonRegion, onPick = { cc -> up { it.copy(psiphonRegion = cc) }; regionDialog = false }) { regionDialog = false }
+}
+
+/** Tor bridge choice on the Home screen, including custom bridges and the button for the Telegram bridge bot. */
+@Composable
+private fun TorBridgePanel(s: Settings, enabled: Boolean) {
+    Field(stringResource(R.string.bridges)) {
+        Chips(
+            listOf(
+                "auto" to stringResource(R.string.bridges_auto),
+                "always" to stringResource(R.string.bridges_always),
+                "never" to stringResource(R.string.bridges_never),
+                "custom" to stringResource(R.string.bridges_custom)
+            ),
+            s.torBridges, enabled
+        ) { v -> up { it.copy(torBridges = v) } }
+    }
+    if (s.torBridges == "custom") BridgeEditor(s, enabled)
 }
 
 @Composable

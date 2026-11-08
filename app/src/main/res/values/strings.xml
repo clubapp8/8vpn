@@ -154,7 +154,7 @@
     <string name="lan_share">Let other devices use the proxy</string>
     <string name="lan_addr">%1$s: SOCKS5 %2$s</string>
     <string name="lan_addr_http">HTTP proxy %1$s</string>
-    <string name="lan_no_ip">No hotspot or USB tethering address found yet. Turn on the hotspot or USB tethering, then reopen this screen.</string>
+    <string name="lan_no_ip">No hotspot or USB tethering address found yet. The addresses above are the usual defaults; turn on the hotspot or USB tethering and the real address appears here by itself.</string>
     <string name="lan_howto">To use the proxy from a laptop: turn on the phone hotspot (or USB tethering), connect the laptop, then set its proxy to the address above. 0.0.0.0 means every network of the phone; a specific IP only works while that network is up. Changes apply on the next connection. SOCKS5 always runs because the app uses it itself; the switch only decides who can reach it. With Aether → Psiphon or Aether → Tor the shared SOCKS5 port is the Psiphon (1821) or Tor (1820) one.</string>
     <string name="lan_warn">Anyone on the same hotspot or Wi-Fi network can use this proxy. Keep a strong hotspot password and turn this off when you are done.</string>
     <string name="socks_share">Share SOCKS5 with other devices</string>
@@ -183,4 +183,10 @@
     <string name="addr_http_lan">HTTP · other devices (%1$s)</string>
     <string name="tile_add">Add button to quick settings (status bar)</string>
     <string name="tile_add_hint">Swipe down the status bar, tap the pencil (edit) icon and drag the \"8 VPN\" tile into the active tiles.</string>
+    <string name="addr_guess">usual address</string>
+    <string name="bridge_get_bot">Get bridges (Telegram bot)</string>
+    <string name="bridge_paste">Paste bridges</string>
+    <string name="bridge_paste_empty">The clipboard has no bridge lines. In the bot, tap the bridge text to copy it, then come back.</string>
+    <string name="bridge_pasted">%1$d bridge line(s) added.</string>
+    <string name="bridge_bot_failed">Could not open Telegram. Open t.me/GetBridgesBot yourself.</string>
 </resources>

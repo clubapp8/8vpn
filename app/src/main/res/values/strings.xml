@@ -181,4 +181,6 @@
     <string name="addr_http_local">HTTP · this phone</string>
     <string name="addr_socks_lan">SOCKS5 · other devices (%1$s)</string>
     <string name="addr_http_lan">HTTP · other devices (%1$s)</string>
+    <string name="tile_add">Add button to quick settings (status bar)</string>
+    <string name="tile_add_hint">Swipe down the status bar, tap the pencil (edit) icon and drag the \"8 VPN\" tile into the active tiles.</string>
 </resources>

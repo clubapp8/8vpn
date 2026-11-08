@@ -91,6 +91,19 @@ fun SettingsScreen(
                     Chips(listOf("singbox" to "sing-box", "hev" to "hev-socks5-tunnel", "hev-tcp" to "hev (TCP only)"), s.tunEngine) { v -> up { it.copy(tunEngine = v) } }
                 }
                 SwitchRow(stringResource(R.string.auto_start), s.autoStart) { v -> up { it.copy(autoStart = v) } }
+                ActionRow(Ico.BOLT, stringResource(R.string.tile_add)) {
+                    if (Build.VERSION.SDK_INT >= 33) {
+                        val sb = ctx.getSystemService(android.app.StatusBarManager::class.java)
+                        sb.requestAddTileService(
+                            android.content.ComponentName(ctx, QsTile::class.java),
+                            ctx.getString(R.string.app_name),
+                            android.graphics.drawable.Icon.createWithResource(ctx, R.drawable.ic_stat),
+                            ctx.mainExecutor
+                        ) { }
+                    } else {
+                        Toast.makeText(ctx, ctx.getString(R.string.tile_add_hint), Toast.LENGTH_LONG).show()
+                    }
+                }
                 SwitchRow(stringResource(R.string.keep_awake), s.keepAwake) { v -> up { it.copy(keepAwake = v) } }
                 val batteryOk = ctx.getSystemService(android.os.PowerManager::class.java).isIgnoringBatteryOptimizations(ctx.packageName)
                 ActionRow(Ico.BOLT, stringResource(if (batteryOk) R.string.battery_row_ok else R.string.battery_row_ask)) {

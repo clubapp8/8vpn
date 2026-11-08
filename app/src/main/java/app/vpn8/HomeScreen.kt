@@ -263,10 +263,6 @@ fun HomeScreen(openSettings: () -> Unit, openLogs: () -> Unit) {
         AppCard(Modifier.animateContentSize()) {
             Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Segmented(
-                    listOf(true to stringResource(R.string.mode_vpn), false to stringResource(R.string.mode_proxy)),
-                    s.vpnMode, idle
-                ) { v -> if (s.vpnMode != v) up { it.copy(vpnMode = v) } }
-                Segmented(
                     listOf(
                         Family.AETHER to stringResource(R.string.core_aether),
                         Family.PSIPHON to stringResource(R.string.core_psiphon),
@@ -278,7 +274,7 @@ fun HomeScreen(openSettings: () -> Unit, openLogs: () -> Unit) {
                         it.copy(route = when (fam) { Family.AETHER -> Route.AETHER; Family.PSIPHON -> Route.PSIPHON_ONLY; Family.TOR -> Route.TOR_ONLY })
                     }
                 }
-                val summary = stringResource(if (s.vpnMode) R.string.mode_vpn else R.string.mode_proxy) + "  ·  " + s.activeLabel()
+                val summary = s.activeLabel()
                 val chevron by animateFloatAsState(if (panelShown) 180f else 0f, label = "chev")
                 Row(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(c.surfaceContainerHigh)

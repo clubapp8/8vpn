@@ -6,7 +6,7 @@
 
 [![Telegram](https://img.shields.io/badge/Telegram-@Clubapp8-26A5E4?logo=telegram&logoColor=white)](https://t.me/Clubapp8)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
-![Version](https://img.shields.io/badge/version-5.8-brightgreen)
+![Version](https://img.shields.io/badge/version-6.8-brightgreen)
 ![Platform](https://img.shields.io/badge/platform-Android%208%2B-3DDC84?logo=android&logoColor=white)
 ![UI](https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4?logo=jetpackcompose&logoColor=white)
 

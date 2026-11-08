@@ -71,7 +71,7 @@
     <string name="theme_dark">Dark</string>
     <string name="theme_light">Light</string>
     <string name="dynamic_color">Dynamic color (Android 12+)</string>
-    <string name="default_mode">Default connection mode</string>
+    <string name="default_mode">Connection mode (VPN or proxy only)</string>
     <string name="auto_start">Start on boot</string>
     <string name="keep_awake">Keep CPU awake while connected</string>
     <string name="split_tunnel">Split tunneling</string>
@@ -162,4 +162,12 @@
     <string name="http_share">Share HTTP proxy with other devices</string>
     <string name="http_addr">HTTP proxy listen address</string>
     <string name="addr_invalid">Enter an IPv4 address such as 0.0.0.0 (all networks) or 192.168.43.1. Invalid text is treated as 0.0.0.0.</string>
+    <string name="sec_split">Split tunneling</string>
+    <string name="sec_cache">Clear cache</string>
+    <string name="sec_share">Share SOCKS5 and HTTP</string>
+    <string name="share_current_title">Addresses you can connect to (tap to copy)</string>
+    <string name="share_active">The proxy is running now. Use these addresses.</string>
+    <string name="share_inactive">Not connected. These addresses work after you connect.</string>
+    <string name="copied_addr">Copied %1$s</string>
+    <string name="split_vpn_only">Split tunneling only works in VPN mode.</string>
 </resources>

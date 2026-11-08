@@ -8,7 +8,7 @@ import java.net.URL
 
 /** Only checks the latest GitHub release of 8 VPN. It never downloads or installs anything. */
 object Updater {
-    private const val API = "https://api.github.com/repos/Mrmmd2004/8vpn/releases/latest"
+    private const val API = "https://api.github.com/repos/clubapp8/8vpn/releases/latest"
 
     data class Info(val tag: String, val newer: Boolean, val url: String)
 
@@ -24,7 +24,7 @@ object Updater {
                 if (con.responseCode != 200) error("HTTP ${con.responseCode}")
                 val j = JSONObject(con.inputStream.bufferedReader().use { it.readText() })
                 val tag = j.getString("tag_name")
-                val page = j.optString("html_url", "https://github.com/Mrmmd2004/8vpn/releases/latest")
+                val page = j.optString("html_url", "https://github.com/clubapp8/8vpn/releases/latest")
                 Info(tag, isNewer(tag, BuildConfig.VERSION_NAME), page)
             } finally {
                 con.disconnect()

@@ -62,7 +62,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-const val GITHUB_URL = "https://github.com/Mrmmd2004/8vpn"
+const val GITHUB_URL = "https://github.com/clubapp8/8vpn"
 const val TELEGRAM_URL = "https://t.me/Clubapp8"
 
 @Composable
@@ -163,7 +163,7 @@ fun AboutScreen(back: () -> Unit) {
                     shape = RoundedCornerShape(16.dp)
                 ) { Text(stringResource(R.string.update_open_github), fontWeight = FontWeight.SemiBold) }
             }
-            LinkRow(Ico.CODE, stringResource(R.string.github), "Mrmmd2004/8vpn") { uri.openUri(GITHUB_URL) }
+            LinkRow(Ico.CODE, stringResource(R.string.github), "clubapp8/8vpn") { uri.openUri(GITHUB_URL) }
             LinkRow(Ico.SEND, stringResource(R.string.telegram), "@Clubapp8") { uri.openUri(TELEGRAM_URL) }
             AppCard {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {

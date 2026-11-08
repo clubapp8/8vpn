@@ -66,7 +66,7 @@
     <string name="theme_dark">تاریک</string>
     <string name="theme_light">روشن</string>
     <string name="dynamic_color">رنگ پویا (اندروید ۱۲+)</string>
-    <string name="default_mode">حالت اتصال پیش‌فرض</string>
+    <string name="default_mode">حالت اتصال (VPN یا فقط پروکسی)</string>
     <string name="auto_start">اجرا هنگام بوت</string>
     <string name="keep_awake">بیدار نگه داشتن CPU هنگام اتصال</string>
     <string name="split_tunnel">تونل تفکیکی (Split tunneling)</string>
@@ -157,4 +157,12 @@
     <string name="http_share">اشتراک پروکسی HTTP با دستگاه‌های دیگه</string>
     <string name="http_addr">آدرس شنود پروکسی HTTP</string>
     <string name="addr_invalid">یه آدرس IPv4 بنویس، مثل 0.0.0.0 (همه‌ی شبکه‌ها) یا 192.168.43.1. متن نامعتبر مثل 0.0.0.0 حساب می‌شه.</string>
+    <string name="sec_split">تونل جداگانه (اسپلیت تانلینگ)</string>
+    <string name="sec_cache">پاک‌کردن کش</string>
+    <string name="sec_share">اشتراک SOCKS5 و HTTP</string>
+    <string name="share_current_title">آدرس‌هایی که می‌توانید به آن‌ها وصل شوید (برای کپی بزنید)</string>
+    <string name="share_active">پروکسی الان فعال است. از این آدرس‌ها استفاده کنید.</string>
+    <string name="share_inactive">وصل نیستید. این آدرس‌ها بعد از اتصال کار می‌کنند.</string>
+    <string name="copied_addr">%1$s کپی شد</string>
+    <string name="split_vpn_only">تونل جداگانه فقط در حالت VPN کار می‌کند.</string>
 </resources>

@@ -1,8 +1,15 @@
 package app.vpn8
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.os.Build
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
@@ -16,8 +23,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -40,6 +50,10 @@ fun SettingsScreen(
     val st by Engine.status.collectAsStateWithLifecycle()
     var confirmClear by remember { mutableStateOf(false) }
     var regionDialog by remember { mutableStateOf(false) }
+    // One section open at a time; tap the header again to close it.
+    var open by rememberSaveable { mutableStateOf<String?>(null) }
+    fun toggle(id: String) { open = if (open == id) null else id }
+    val idle = st.phase == Phase.IDLE
 
     Page(stringResource(R.string.settings), back, actions = {
         IconBtn(Ico.INFO, openAbout)
@@ -48,7 +62,11 @@ fun SettingsScreen(
             Banner(stringResource(R.string.restart_note))
 
             // ---- General
-            Group(stringResource(R.string.sec_general)) {
+            CollapsibleGroup(
+                stringResource(R.string.sec_general), open == "general", { toggle("general") },
+                subtitle = stringResource(if (s.vpnMode) R.string.mode_vpn else R.string.mode_proxy) + "  ·  " +
+                    (if (s.language == "fa") "فارسی" else "English")
+            ) {
                 Field(stringResource(R.string.language)) {
                     Chips(listOf("en" to "English", "fa" to "فارسی"), s.language) { v ->
                         if (v != s.language) { up { it.copy(language = v) }; onLanguageChanged() }
@@ -62,7 +80,8 @@ fun SettingsScreen(
                 }
                 if (Build.VERSION.SDK_INT >= 31) SwitchRow(stringResource(R.string.dynamic_color), s.dynamicColor) { v -> up { it.copy(dynamicColor = v) } }
                 Field(stringResource(R.string.default_mode)) {
-                    Chips(listOf(true to stringResource(R.string.mode_vpn), false to stringResource(R.string.mode_proxy)), s.vpnMode) { v -> up { it.copy(vpnMode = v) } }
+                    Chips(listOf(true to stringResource(R.string.mode_vpn), false to stringResource(R.string.mode_proxy)), s.vpnMode, enabled = idle) { v -> up { it.copy(vpnMode = v) } }
+                    if (!idle) Hint(stringResource(R.string.locked_hint))
                 }
                 Field(stringResource(R.string.tun_engine)) {
                     Chips(listOf("singbox" to "sing-box", "hev" to "hev-socks5-tunnel", "hev-tcp" to "hev (TCP only)"), s.tunEngine) { v -> up { it.copy(tunEngine = v) } }
@@ -84,6 +103,17 @@ fun SettingsScreen(
                         }
                     }
                 }
+            }
+
+            // ---- Split tunneling (its own section)
+            CollapsibleGroup(
+                stringResource(R.string.sec_split), open == "split", { toggle("split") },
+                subtitle = when (s.splitMode) {
+                    "include" -> stringResource(R.string.split_include) + "  ·  " + stringResource(R.string.split_summary, s.splitApps.size)
+                    "exclude" -> stringResource(R.string.split_exclude) + "  ·  " + stringResource(R.string.split_summary, s.splitApps.size)
+                    else -> stringResource(R.string.split_off)
+                }
+            ) {
                 Field(stringResource(R.string.split_tunnel)) {
                     Chips(
                         listOf("off" to stringResource(R.string.split_off), "include" to stringResource(R.string.split_include), "exclude" to stringResource(R.string.split_exclude)),
@@ -93,10 +123,14 @@ fun SettingsScreen(
                 if (s.splitMode != "off") {
                     ActionRow(Ico.SETTINGS, stringResource(R.string.split_summary, s.splitApps.size), onClick = openSplit)
                 }
+                if (!s.vpnMode) Hint(stringResource(R.string.split_vpn_only))
             }
 
             // ---- Core and protocol
-            Group(stringResource(R.string.sec_core)) {
+            CollapsibleGroup(
+                stringResource(R.string.sec_core), open == "core", { toggle("core") },
+                subtitle = s.activeLabel()
+            ) {
                 Field(stringResource(R.string.protocol)) {
                     Chips(Protocol.values().map { it to it.label }, s.protocol) { v -> up { it.copy(protocol = v) } }
                 }
@@ -137,14 +171,14 @@ fun SettingsScreen(
             }
 
             // ---- Routing
-            Group(stringResource(R.string.sec_routing)) {
+            CollapsibleGroup(stringResource(R.string.sec_routing), open == "routing", { toggle("routing") }) {
                 TextRow(stringResource(R.string.route_block), s.routeBlock, stringResource(R.string.route_hint)) { v -> up { it.copy(routeBlock = v) } }
                 TextRow(stringResource(R.string.route_direct), s.routeDirect, stringResource(R.string.route_hint)) { v -> up { it.copy(routeDirect = v) } }
                 TextRow(stringResource(R.string.dns), s.dns, stringResource(R.string.dns_hint)) { v -> up { it.copy(dns = v) } }
             }
 
             // ---- Psiphon
-            Group(stringResource(R.string.sec_psiphon)) {
+            CollapsibleGroup(stringResource(R.string.sec_psiphon), open == "psiphon", { toggle("psiphon") }) {
                 RegionButton(s, true) { regionDialog = true }
                 Field(stringResource(R.string.psiphon_mode)) {
                     Chips(listOf("auto" to "Auto", "cdn" to "CDN"), s.psiphonMode) { v -> up { it.copy(psiphonMode = v) } }
@@ -152,7 +186,7 @@ fun SettingsScreen(
             }
 
             // ---- Tor
-            Group(stringResource(R.string.sec_tor)) {
+            CollapsibleGroup(stringResource(R.string.sec_tor), open == "tor", { toggle("tor") }) {
                 Field(stringResource(R.string.bridges)) {
                     Chips(
                         listOf("auto" to stringResource(R.string.bridges_auto), "always" to stringResource(R.string.bridges_always), "never" to stringResource(R.string.bridges_never)),
@@ -161,8 +195,30 @@ fun SettingsScreen(
                 }
             }
 
-            // ---- Proxy ports and sharing
-            Group(stringResource(R.string.sec_lan)) {
+            // ---- Share SOCKS5 / HTTP: ports, sharing and the addresses you can connect to
+            val exitPort = ArgBuilder.exitPort(s)
+            CollapsibleGroup(
+                stringResource(R.string.sec_share), open == "share", { toggle("share") },
+                subtitle = stringResource(R.string.proxy_info, "127.0.0.1:$exitPort") +
+                    if (s.httpEnabled) "  ·  " + stringResource(R.string.http_info, "127.0.0.1:${s.httpPort}") else ""
+            ) {
+                // Current addresses and ports (tap to copy)
+                val sharingSocks = s.socksShare
+                val sharingHttp = s.httpEnabled && s.httpShare
+                val socksT = remember(s.socksShare, s.socksHost, st.phase) { if (sharingSocks) LanShare.targets(Hosts.clean(s.socksHost)) else emptyList() }
+                val httpT = remember(s.httpShare, s.httpHost, s.httpEnabled, st.phase) { if (sharingHttp) LanShare.targets(Hosts.clean(s.httpHost)) else emptyList() }
+
+                Field(stringResource(R.string.share_current_title)) {
+                    Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp)) {
+                        AddrLine(ctx, stringResource(R.string.proxy_info, "127.0.0.1:$exitPort"), "127.0.0.1:$exitPort")
+                        if (s.httpEnabled) AddrLine(ctx, stringResource(R.string.http_info, "127.0.0.1:${s.httpPort}"), "127.0.0.1:${s.httpPort}")
+                        for (a in socksT) AddrLine(ctx, stringResource(R.string.lan_addr, LanShare.kind(a.iface), "${a.ip}:$exitPort"), "${a.ip}:$exitPort")
+                        for (a in httpT) AddrLine(ctx, stringResource(R.string.lan_addr_http, "${a.ip}:${s.httpPort}"), "${a.ip}:${s.httpPort}")
+                    }
+                    if ((sharingSocks || sharingHttp) && socksT.isEmpty() && httpT.isEmpty()) Hint(stringResource(R.string.lan_no_ip))
+                    Hint(stringResource(if (st.phase == Phase.CONNECTED) R.string.share_active else R.string.share_inactive))
+                }
+
                 // SOCKS5 (always running: the app itself uses it)
                 PortRow(stringResource(R.string.socks_port), s.socksPort, if (s.httpEnabled) s.httpPort else -1, stringResource(R.string.port_invalid)) { v -> up { it.copy(socksPort = v) } }
                 SwitchRow(stringResource(R.string.socks_share), s.socksShare) { v -> up { it.copy(socksShare = v) } }
@@ -182,18 +238,7 @@ fun SettingsScreen(
                     }
                 }
 
-                val sharingSocks = s.socksShare
-                val sharingHttp = s.httpEnabled && s.httpShare
                 if (sharingSocks || sharingHttp) {
-                    val socksT = remember(s.socksShare, s.socksHost, st.phase) { if (sharingSocks) LanShare.targets(Hosts.clean(s.socksHost)) else emptyList() }
-                    val httpT = remember(s.httpShare, s.httpHost, s.httpEnabled, st.phase) { if (sharingHttp) LanShare.targets(Hosts.clean(s.httpHost)) else emptyList() }
-                    if (socksT.isEmpty() && httpT.isEmpty()) {
-                        Hint(stringResource(R.string.lan_no_ip))
-                    } else {
-                        val socksPort = ArgBuilder.exitPort(s)
-                        for (a in socksT) Hint(stringResource(R.string.lan_addr, LanShare.kind(a.iface), "${a.ip}:$socksPort"))
-                        for (a in httpT) Hint(stringResource(R.string.lan_addr_http, "${a.ip}:${s.httpPort}"))
-                    }
                     Hint(stringResource(R.string.lan_howto))
                     Hint(stringResource(R.string.lan_warn), error = true)
                 }
@@ -201,7 +246,7 @@ fun SettingsScreen(
             }
 
             // ---- Advanced
-            Group(stringResource(R.string.sec_advanced)) {
+            CollapsibleGroup(stringResource(R.string.sec_advanced), open == "advanced", { toggle("advanced") }) {
                 Field(stringResource(R.string.perf_profile)) {
                     Chips(listOf("auto" to "Auto", "low" to "Low", "medium" to "Medium", "high" to "High"), s.perf) { v -> up { it.copy(perf = v) } }
                 }
@@ -210,7 +255,16 @@ fun SettingsScreen(
                 NumberRow(stringResource(R.string.tcp_buffer), s.tcpBufferKb) { v -> up { it.copy(tcpBufferKb = v) } }
                 Hint(stringResource(R.string.tunnel_note))
                 ActionRow(Ico.LOGS, stringResource(R.string.open_logs), onClick = openLogs)
-                ActionRow(Ico.TRASH, stringResource(R.string.clear_cache), enabled = st.phase == Phase.IDLE, danger = true) { confirmClear = true }
+            }
+
+            // ---- Clear cache (its own section)
+            CollapsibleGroup(
+                stringResource(R.string.sec_cache), open == "cache", { toggle("cache") },
+                subtitle = stringResource(R.string.clear_cache), danger = true
+            ) {
+                Hint(stringResource(R.string.clear_cache_warn))
+                ActionRow(Ico.TRASH, stringResource(R.string.clear_cache), enabled = idle, danger = true) { confirmClear = true }
+                if (!idle) Hint(stringResource(R.string.locked_hint))
             }
             Spacer(Modifier.height(32.dp))
         }
@@ -236,4 +290,21 @@ fun SettingsScreen(
             dismissButton = { TextButton(onClick = { confirmClear = false }) { Text(stringResource(R.string.cancel)) } }
         )
     }
+}
+
+
+/** One address line in monospace; tap to copy the bare host:port. */
+@Composable
+private fun AddrLine(ctx: Context, text: String, copy: String) {
+    val c = MaterialTheme.colorScheme
+    Text(
+        text,
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(c.surfaceContainerHigh)
+            .clickable {
+                val cm = ctx.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                cm.setPrimaryClip(ClipData.newPlainText("proxy", copy))
+                Toast.makeText(ctx, ctx.getString(R.string.copied_addr, copy), Toast.LENGTH_SHORT).show()
+            }.padding(horizontal = 12.dp, vertical = 10.dp),
+        style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace
+    )
 }

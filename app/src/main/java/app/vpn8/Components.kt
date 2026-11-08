@@ -3,6 +3,8 @@
 package app.vpn8
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -43,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -187,6 +190,55 @@ fun Group(title: String, content: @Composable ColumnScope.() -> Unit) {
     SectionTitle(title)
     AppCard {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp), content = content)
+    }
+}
+
+/**
+ * A settings section shown as a button: tap the header to open or close the rows.
+ * [subtitle] is a short one-line summary shown under the title while the section is closed.
+ */
+@Composable
+fun CollapsibleGroup(
+    title: String,
+    expanded: Boolean,
+    onToggle: () -> Unit,
+    subtitle: String? = null,
+    danger: Boolean = false,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    val c = MaterialTheme.colorScheme
+    val shape = RoundedCornerShape(22.dp)
+    val chevron by animateFloatAsState(if (expanded) 180f else 0f, label = "sectionChevron")
+    val titleColor = if (danger) c.error else c.onSurface
+    Column(
+        Modifier.padding(top = 10.dp).fillMaxWidth().clip(shape).background(c.surfaceContainer)
+            .border(1.dp, if (expanded) c.primary.copy(alpha = 0.45f) else c.outlineVariant, shape)
+            .animateContentSize()
+    ) {
+        Row(
+            Modifier.fillMaxWidth().clickable(onClick = onToggle).padding(horizontal = 16.dp, vertical = 15.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(Modifier.width(4.dp).height(16.dp).clip(RoundedCornerShape(2.dp)).background(LocalExtra.current.gradient))
+            Spacer(Modifier.width(10.dp))
+            Column(Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = titleColor)
+                if (!expanded && subtitle != null) {
+                    Text(
+                        subtitle, style = MaterialTheme.typography.bodySmall, color = c.onSurfaceVariant,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+            Icon8(Ico.CHEVRON, c.onSurfaceVariant, 20.dp, Modifier.rotate(chevron))
+        }
+        if (expanded) {
+            Column(
+                Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                content = content
+            )
+        }
     }
 }
 

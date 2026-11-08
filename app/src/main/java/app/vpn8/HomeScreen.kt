@@ -235,12 +235,6 @@ fun HomeScreen(openSettings: () -> Unit, openLogs: () -> Unit) {
             }
         }
 
-        // Addresses for other devices (hotspot / USB / Wi-Fi), shown as soon as sharing is on, even before connecting
-        if (s.socksShare || s.httpShare) {
-            Spacer(Modifier.height(10.dp))
-            ShareBox(s, st.phase)
-        }
-
         // ---- Actions: only while connected, so there are no dead buttons
         if (live) {
             Spacer(Modifier.height(12.dp))
@@ -312,6 +306,11 @@ fun HomeScreen(openSettings: () -> Unit, openLogs: () -> Unit) {
                     }
                 }
             }
+        }
+        // Addresses for other devices (hotspot / USB / Wi-Fi), shown as soon as sharing is on, at the bottom under the log
+        if (s.socksShare || s.httpShare) {
+            Spacer(Modifier.height(12.dp))
+            ShareBox(s, st.phase)
         }
         Spacer(Modifier.height(24.dp))
     }

@@ -66,7 +66,7 @@ import androidx.compose.ui.unit.sp
 
 enum class Ico {
     BACK, SETTINGS, LOGS, POWER, CHECK, CHEVRON, LOCK, DOWN, UP, BOLT, GLOBE, REFRESH,
-    COPY, SHARE, TRASH, INFO, CODE, SEND, PAUSE, PLAY
+    COPY, SHARE, TRASH, INFO, CODE, SEND, PAUSE, PLAY, PASTE
 }
 
 @Composable
@@ -150,6 +150,11 @@ fun Icon8(ico: Ico, tint: Color, sz: Dp = 22.dp, modifier: Modifier = Modifier, 
             Ico.PAUSE -> { line(9f, 5f, 9f, 19f); line(15f, 5f, 15f, 19f) }
             Ico.PLAY -> poly(true, 8f, 5f, 19f, 12f, 8f, 19f)
             Ico.SEND -> { poly(true, 21f, 3f, 3f, 10.5f, 10f, 13f, 13f, 20f); line(10f, 13f, 21f, 3f) }
+            Ico.PASTE -> {
+                drawRoundRect(tint, topLeft = p(5f, 5f), size = Size(14f * u, 16f * u), cornerRadius = CornerRadius(2.5f * u), style = st)
+                drawRoundRect(tint, topLeft = p(9f, 2.5f), size = Size(6f * u, 4.5f * u), cornerRadius = CornerRadius(1.5f * u), style = st)
+                line(8.5f, 12f, 15.5f, 12f); line(8.5f, 16f, 13.5f, 16f)
+            }
         }
     }
 }
@@ -378,8 +383,10 @@ fun TonalPill(ico: Ico, text: String, enabled: Boolean = true, danger: Boolean =
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon8(ico, tone, 18.dp)
-        Spacer(Modifier.width(8.dp))
-        Text(text, color = tone, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+        if (text.isNotEmpty()) {
+            Spacer(Modifier.width(8.dp))
+            Text(text, color = tone, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+        }
     }
 }
 

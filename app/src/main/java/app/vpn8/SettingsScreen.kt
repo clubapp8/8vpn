@@ -186,12 +186,37 @@ fun SettingsScreen(
             }
 
             // ---- Tor
-            CollapsibleGroup(stringResource(R.string.sec_tor), open == "tor", { toggle("tor") }) {
+            CollapsibleGroup(
+                stringResource(R.string.sec_tor), open == "tor", { toggle("tor") },
+                subtitle = stringResource(R.string.bridges) + ": " + when (s.torBridges) {
+                    "always" -> stringResource(R.string.bridges_always)
+                    "never" -> stringResource(R.string.bridges_never)
+                    "custom" -> stringResource(R.string.bridges_custom)
+                    else -> stringResource(R.string.bridges_auto)
+                }
+            ) {
                 Field(stringResource(R.string.bridges)) {
                     Chips(
-                        listOf("auto" to stringResource(R.string.bridges_auto), "always" to stringResource(R.string.bridges_always), "never" to stringResource(R.string.bridges_never)),
+                        listOf(
+                            "auto" to stringResource(R.string.bridges_auto), "always" to stringResource(R.string.bridges_always),
+                            "never" to stringResource(R.string.bridges_never), "custom" to stringResource(R.string.bridges_custom)
+                        ),
                         s.torBridges
                     ) { v -> up { it.copy(torBridges = v) } }
+                }
+                if (s.torBridges == "custom") {
+                    val all = TorBridges.lines(s.torCustomBridges)
+                    val bad = all.filterNot { TorBridges.usable(it) }
+                    TextRow(
+                        stringResource(R.string.bridges_custom_title), s.torCustomBridges,
+                        stringResource(R.string.bridges_custom_hint), singleLine = false, isError = bad.isNotEmpty() || all.isEmpty()
+                    ) { v -> up { it.copy(torCustomBridges = v) } }
+                    when {
+                        all.isEmpty() -> Hint(stringResource(R.string.bridges_custom_empty), error = true)
+                        bad.isNotEmpty() -> Hint(stringResource(R.string.bridges_custom_unsupported, bad.size, bad.map { TorBridges.transport(it) }.distinct().joinToString(", ")), error = true)
+                        else -> Hint(stringResource(R.string.bridges_custom_count, all.size))
+                    }
+                    Hint(stringResource(R.string.bridges_custom_note))
                 }
             }
 

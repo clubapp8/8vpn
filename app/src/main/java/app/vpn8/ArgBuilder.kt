@@ -94,6 +94,16 @@ object ArgBuilder {
             when (s.torBridges) {
                 "always" -> a += "--tor-bridges"
                 "never" -> a += "--no-tor-bridges"
+                "custom" -> {
+                    // The user's own bridge lines go to a file in torrc shape; empty or unusable text means automatic.
+                    val txt = TorBridges.fileText(s.torCustomBridges)
+                    if (txt.isNotEmpty()) {
+                        dir.mkdirs()
+                        val f = File(dir, "tor-bridges.txt")
+                        f.writeText(txt + "\n")
+                        a += listOf("--tor-bridge-file", f.path)
+                    }
+                }
             }
         }
         if (s.perf != "auto") a += listOf("--perf", s.perf)

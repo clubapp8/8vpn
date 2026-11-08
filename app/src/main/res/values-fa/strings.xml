@@ -165,4 +165,11 @@
     <string name="share_inactive">وصل نیستید. این آدرس‌ها بعد از اتصال کار می‌کنند.</string>
     <string name="copied_addr">%1$s کپی شد</string>
     <string name="split_vpn_only">تونل جداگانه فقط در حالت VPN کار می‌کند.</string>
+    <string name="bridges_custom">سفارشی</string>
+    <string name="bridges_custom_title">بریج‌های سفارشی (هر خط یک بریج)</string>
+    <string name="bridges_custom_hint">obfs4 1.2.3.4:443 FINGERPRINT cert=... iat-mode=0</string>
+    <string name="bridges_custom_empty">هنوز بریجی وارد نشده. تا وقتی اضافه نکنید Tor از بریج‌های خودکار استفاده می‌کند.</string>
+    <string name="bridges_custom_count">%1$d بریج استفاده می‌شود.</string>
+    <string name="bridges_custom_unsupported">%1$d خط از ترنسپورتی استفاده می‌کند که در این برنامه نیست (%2$s) و نادیده گرفته می‌شود. فقط obfs4، webtunnel و بریج ساده کار می‌کنند.</string>
+    <string name="bridges_custom_note">خطوط را از bridges.torproject.org یا ربات تلگرام @GetBridgesBot کپی کنید. کلمه‌ی Bridge در ابتدای خط اختیاری است. تغییرات در اتصال بعدی اعمال می‌شود.</string>
 </resources>

@@ -69,6 +69,7 @@ data class Settings(
     val psiphonRegion: String = "",
     val psiphonMode: String = "auto",
     val torBridges: String = "auto",
+    val torCustomBridges: String = "",
     val socksPort: Int = 1819,
     val httpEnabled: Boolean = false,
     val httpPort: Int = 1822,
@@ -246,6 +247,7 @@ object SettingsStore {
             psiphonRegion = str("psiphonRegion", d.psiphonRegion),
             psiphonMode = str("psiphonMode", d.psiphonMode),
             torBridges = str("torBridges", d.torBridges),
+            torCustomBridges = str("torCustomBridges", d.torCustomBridges),
             socksPort = prefs.getInt("socksPort", d.socksPort),
             httpEnabled = prefs.getBoolean("httpEnabled", d.httpEnabled),
             httpPort = prefs.getInt("httpPort", d.httpPort),
@@ -275,7 +277,7 @@ object SettingsStore {
             .putString("routeBlock", s.routeBlock)
             .putString("routeDirect", s.routeDirect).putString("dns", s.dns)
             .putString("psiphonRegion", s.psiphonRegion).putString("psiphonMode", s.psiphonMode)
-            .putString("torBridges", s.torBridges).putInt("socksPort", s.socksPort)
+            .putString("torBridges", s.torBridges).putString("torCustomBridges", s.torCustomBridges).putInt("socksPort", s.socksPort)
             .putBoolean("httpEnabled", s.httpEnabled).putInt("httpPort", s.httpPort)
             .putBoolean("socksShare", s.socksShare).putString("socksHost", s.socksHost)
             .putBoolean("httpShare", s.httpShare).putString("httpHost", s.httpHost)
@@ -292,3 +294,28 @@ fun Settings.pingLimit() = pingFails.coerceIn(1, 20)
 fun Settings.pingEverySec() = pingIntervalSec.coerceIn(1, 60)
 fun Settings.mtu() = tunMtu.coerceIn(1280, 9000)
 fun Settings.tcpKb() = tcpBufferKb.coerceIn(16, 4096)
+
+
+/** Custom Tor bridge lines typed or pasted by the user (obfs4 and webtunnel work; the app ships lyrebird only). */
+object TorBridges {
+    private val supported = setOf("obfs4", "webtunnel")
+
+    /** Cleans the text: one bridge per line, blank lines and # comments dropped, a leading "Bridge " removed. */
+    fun lines(text: String): List<String> = text.lines()
+        .map { it.trim() }
+        .filter { it.isNotEmpty() && !it.startsWith("#") }
+        .map { it.replace(Regex("^bridge\\s+", RegexOption.IGNORE_CASE), "").trim() }
+        .filter { it.isNotEmpty() }
+
+    /** The transport word of a line, or "" for a plain bridge (IP:port ...). */
+    fun transport(line: String): String {
+        val first = line.substringBefore(' ').lowercase()
+        return if (first.isNotEmpty() && !first[0].isDigit() && first[0] != '[') first else ""
+    }
+
+    /** True when the app can run this bridge: plain, obfs4 or webtunnel. */
+    fun usable(line: String): Boolean = transport(line).let { it.isEmpty() || it in supported }
+
+    /** The file content in torrc shape (each line starts with "Bridge "), only usable lines. */
+    fun fileText(text: String): String = lines(text).filter { usable(it) }.joinToString("\n") { "Bridge $it" }
+}

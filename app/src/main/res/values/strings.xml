@@ -170,4 +170,11 @@
     <string name="share_inactive">Not connected. These addresses work after you connect.</string>
     <string name="copied_addr">Copied %1$s</string>
     <string name="split_vpn_only">Split tunneling only works in VPN mode.</string>
+    <string name="bridges_custom">Custom</string>
+    <string name="bridges_custom_title">Custom bridge lines (one per line)</string>
+    <string name="bridges_custom_hint">obfs4 1.2.3.4:443 FINGERPRINT cert=... iat-mode=0</string>
+    <string name="bridges_custom_empty">No bridge lines yet. Tor will use automatic bridges until you add some.</string>
+    <string name="bridges_custom_count">%1$d bridge line(s) will be used.</string>
+    <string name="bridges_custom_unsupported">%1$d line(s) use a transport this app does not include (%2$s) and will be skipped. Only obfs4, webtunnel and plain bridges work.</string>
+    <string name="bridges_custom_note">Paste lines from bridges.torproject.org or the Telegram bot @GetBridgesBot. A leading "Bridge" word is optional. Changes apply on the next connection.</string>
 </resources>

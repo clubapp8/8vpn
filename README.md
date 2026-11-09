@@ -25,29 +25,31 @@ Jetpack Compose, Material 3, dark by default, English and Persian (RTL).
 
 ## Features
 
-- **Two modes**: VPN (the whole device goes through the tunnel) or Proxy-only (a local SOCKS5 and optional HTTP proxy).
+- **Two modes**: VPN (the whole device goes through the tunnel) or Proxy-only (a local SOCKS5 and optional HTTP proxy). The VPN / Proxy choice and the route switcher live in **Settings**, so the home screen stays clean.
 - **Route switcher**: Aether, Aether → Psiphon, Aether → Tor, Psiphon only, Tor only, and the reverse routes (Psiphon → MASQUE, Tor → MASQUE).
-  Aether protocols: MASQUE, WireGuard, WARP-in-MASQUE (Gool), WARP-in-WARP (Gool classic) and MASQUE-in-MASQUE. Psiphon has region and mode selection, Tor has bridge options.
+  Aether protocols: MASQUE, WireGuard, WARP-in-MASQUE (Gool), WARP-in-WARP (Gool classic) and MASQUE-in-MASQUE. Psiphon has region and mode selection, Tor has bridge options including **custom bridges** (obfs4 and webtunnel lines in a fixed-size scrollable box, with a button to get bridges from the Telegram bot @GetBridgesBot and paste them).
 - **Smart reconnect**: reconnects when the core dies, when pings fail, or when the network changes (Wi-Fi ↔ mobile data). It retries with a fresh gateway scan, or goes back quickly to the last working gateway.
 - **Custom endpoint**: set your own gateway `IP:port` (outer and inner hop) and skip the scan.
-- **Share the proxy with other devices**: let a laptop or another phone use the SOCKS5 / HTTP proxy through your hotspot or USB tethering. The app shows the addresses to enter.
+- **Share the proxy with other devices**: let a laptop or another phone use the SOCKS5 / HTTP proxy through your hotspot or USB tethering. The *Share SOCKS5 and HTTP* section lists every address you can connect to in one box (tap to copy), with separate switches for HTTP on this phone and for other devices.
+- **One address for everything**: *Share everything on one address* gives SOCKS5 and HTTP on a single port (default `1830`) that always carries the **final output** of the connected mode (Aether, Aether → Psiphon, Aether → Tor, Psiphon only or Tor only).
 - **Split tunneling**: include only selected apps or exclude them.
 - **Routing rules**: block list and direct list (domains, IPs, CIDR, ports), custom DNS inside the tunnel, upstream proxy (`socks5://` or `http://`).
 - **Pause and resume**: the Stop button turns the VPN off while the core keeps running, so Start resumes at once.
 - **Tuning**: scan level, obfuscation profile, IP version, performance profile, TUN MTU, TCP buffer, ping interval and failure count, connection attempts and delay, extra Aether arguments.
 - **Live info**: ping, download/upload speed, link speed, exit IP with country flag, the reason of the last drop, and logs you can copy or share.
 - **Update check**: checks the latest GitHub release from the About screen. It never downloads or installs anything by itself.
-- Quick Settings tile, start on boot, battery-optimization shortcut, dynamic color (Android 12+), dark / light theme.
+- **Collapsible settings**: General, Split tunneling, Core and protocol, Routing, Psiphon, Tor, Share SOCKS5 and HTTP, Advanced and Clear cache are separate sections, and a logs button sits at the top of Settings.
+- Quick Settings tile (toggle the VPN from the status bar), start on boot, battery-optimization shortcut, dynamic color (Android 12+), dark / light theme.
 - English and Persian UI with full RTL support.
 
 ## Screenshots
 
 <p align="center">
-  <img src="screenshots/01-home.jpg" width="180" alt="Home">
-  <img src="screenshots/02-connected.jpg" width="180" alt="Connected">
-  <img src="screenshots/03-psiphon-region.jpg" width="180" alt="Psiphon region">
-  <img src="screenshots/04-settings.jpg" width="180" alt="Settings">
-  <img src="screenshots/05-light-theme.jpg" width="180" alt="Light theme">
+  <img src="screenshots/01-home.jpg" width="180" alt="Home, connected">
+  <img src="screenshots/02-settings.jpg" width="180" alt="Settings sections">
+  <img src="screenshots/03-share.jpg" width="180" alt="Share SOCKS5 and HTTP">
+  <img src="screenshots/04-light-theme.jpg" width="180" alt="Light theme">
+  <img src="screenshots/05-about.jpg" width="180" alt="About">
 </p>
 
 ## How it works
@@ -57,7 +59,7 @@ VPN mode:    apps -> VpnService (TUN) -> sing-box (gVisor stack) -> SOCKS5 127.0
 Proxy-only:  apps -> SOCKS5 127.0.0.1:1819 (or HTTP 127.0.0.1:1822) -> Aether / Psiphon / Tor -> internet
 ```
 
-Ports: SOCKS5 `1819` (configurable), Tor `1820`, Psiphon `1821`, optional HTTP `1822` (configurable).
+Ports: SOCKS5 `1819` (configurable), Tor `1820`, Psiphon `1821`, optional HTTP `1822` (configurable), shared single address `1830` (configurable, listens on `0.0.0.0` by default).
 
 **TUN engines** (Settings → VPN engine):
 
@@ -84,6 +86,7 @@ Ports: SOCKS5 `1819` (configurable), Tor `1820`, Psiphon `1821`, optional HTTP `
 - Aether is AGPL-3.0, so this project is AGPL-3.0 too (see [LICENSE](LICENSE)).
 - Aether's trademark policy asks derivative products to use their own name and branding, so the app is named **8 VPN** and the core is only credited.
 - The Psiphon region list is static; the real set depends on Psiphon's servers.
+- Custom Tor bridges only support obfs4, webtunnel and plain bridges; other transports are skipped.
 - Sharing the proxy lets anyone on the same hotspot or Wi-Fi network use it. Use a strong hotspot password and turn sharing off when you are done.
 
 ---
@@ -103,29 +106,31 @@ Ports: SOCKS5 `1819` (configurable), Tor `1820`, Psiphon `1821`, optional HTTP `
 
 ## امکانات
 
-- **دو حالت**: VPN (کل دستگاه از تونل رد می‌شود) یا فقط پروکسی (یک SOCKS5 محلی و در صورت نیاز پروکسی HTTP).
+- **دو حالت**: VPN (کل دستگاه از تونل رد می‌شود) یا فقط پروکسی (یک SOCKS5 محلی و در صورت نیاز پروکسی HTTP). انتخاب حالت VPN / پروکسی و مسیر در **تنظیمات** است تا صفحه‌ی اصلی ساده بماند.
 - **انتخاب مسیر**: Aether، Aether ← Psiphon، Aether ← Tor، فقط Psiphon، فقط Tor و مسیرهای معکوس (Psiphon ← MASQUE و Tor ← MASQUE).
-  پروتکل‌های Aether: MASQUE، WireGuard، WARP-in-MASQUE (Gool)، WARP-in-WARP (Gool classic) و MASQUE-in-MASQUE. برای Psiphon انتخاب منطقه و حالت و برای Tor گزینه‌های بریج هست.
+  پروتکل‌های Aether: MASQUE، WireGuard، WARP-in-MASQUE (Gool)، WARP-in-WARP (Gool classic) و MASQUE-in-MASQUE. برای Psiphon انتخاب منطقه و حالت و برای Tor گزینه‌های بریج هست، از جمله **بریج دلخواه** (خط‌های obfs4 و webtunnel در یک کادر اسکرول‌شونده با اندازه‌ی ثابت، و دکمه‌ای برای گرفتن بریج از ربات تلگرام @GetBridgesBot و چسباندن آن).
 - **اتصال مجدد هوشمند**: اگر هسته از کار بیفتد، پینگ‌ها شکست بخورند یا شبکه عوض شود (وای‌فای ↔ دیتای موبایل) دوباره وصل می‌شود؛ یا با اسکن تازه‌ی گیت‌وی تلاش می‌کند یا سریع به آخرین گیت‌وی سالم برمی‌گردد.
 - **اندپوینت دلخواه**: گیت‌وی خودتان را به‌صورت `IP:port` (پرش بیرونی و داخلی) بدهید تا اسکن انجام نشود.
-- **اشتراک‌گذاری پروکسی با دستگاه‌های دیگر**: از طریق هات‌اسپات یا USB tethering، لپ‌تاپ یا گوشی دیگر می‌تواند از SOCKS5 / HTTP گوشی استفاده کند. برنامه آدرس‌هایی را که باید وارد کنید نشان می‌دهد.
+- **اشتراک‌گذاری پروکسی با دستگاه‌های دیگر**: از طریق هات‌اسپات یا USB tethering، لپ‌تاپ یا گوشی دیگر می‌تواند از SOCKS5 / HTTP گوشی استفاده کند. بخش *اشتراک SOCKS5 و HTTP* همه‌ی آدرس‌های قابل اتصال را در یک کادر نشان می‌دهد (با لمس کپی می‌شود) و برای HTTP روی همین گوشی و روی دستگاه‌های دیگر کلید جداگانه دارد.
+- **یک آدرس برای همه‌چیز**: گزینه‌ی *اشتراک همه‌چیز روی یک آدرس* یک پورت واحد (پیش‌فرض `1830`) برای SOCKS5 و HTTP می‌دهد که همیشه **خروجی نهایی** حالت متصل‌شده را شیر می‌کند (Aether، Aether ← Psiphon، Aether ← Tor، فقط Psiphon یا فقط Tor).
 - **تونل‌سازی انتخابی (Split tunneling)**: فقط برنامه‌های انتخاب‌شده یا همه به‌جز آن‌ها.
 - **قوانین مسیریابی**: فهرست بلاک و فهرست مستقیم (دامنه، IP، CIDR، پورت)، DNS دلخواه داخل تونل و پروکسی بالادستی (`socks5://` یا `http://`).
 - **توقف و ادامه**: دکمه‌ی Stop فقط VPN را خاموش می‌کند و هسته روشن می‌ماند، پس Start فوری ادامه می‌دهد.
 - **تنظیمات دقیق**: سطح اسکن، پروفایل مبهم‌سازی، نسخه‌ی IP، پروفایل کارایی، MTU و بافر TCP، فاصله و تعداد خطای پینگ، تعداد و فاصله‌ی تلاش‌های اتصال و آرگومان‌های اضافه‌ی Aether.
 - **اطلاعات زنده**: پینگ، سرعت دانلود و آپلود، سرعت لینک، IP خروجی همراه با پرچم کشور، دلیل آخرین قطع شدن و لاگ‌هایی که می‌توانید کپی یا ارسال کنید.
 - **بررسی آپدیت**: از صفحه‌ی About آخرین ریلیز گیت‌هاب را چک می‌کند و خودش چیزی دانلود یا نصب نمی‌کند.
-- کاشی تنظیمات سریع، اجرا هنگام بوت، میان‌بر مجوز باتری، رنگ پویا (اندروید ۱۲+)، تم تیره و روشن.
+- **تنظیمات تاشو**: General، Split tunneling، Core and protocol، Routing، Psiphon، Tor، اشتراک SOCKS5 و HTTP، Advanced و Clear cache هرکدام بخش جداگانه دارند و دکمه‌ی لاگ‌ها بالای تنظیمات است.
+- کاشی تنظیمات سریع (وصل و قطع VPN از نوار اعلان‌ها)، اجرا هنگام بوت، میان‌بر مجوز باتری، رنگ پویا (اندروید ۱۲+)، تم تیره و روشن.
 - رابط فارسی و انگلیسی با پشتیبانی کامل از راست‌به‌چپ.
 
 ## تصاویر برنامه
 
 <p align="center">
-  <img src="screenshots/01-home.jpg" width="180" alt="صفحه‌ی اصلی">
-  <img src="screenshots/02-connected.jpg" width="180" alt="متصل">
-  <img src="screenshots/03-psiphon-region.jpg" width="180" alt="منطقه‌ی Psiphon">
-  <img src="screenshots/04-settings.jpg" width="180" alt="تنظیمات">
-  <img src="screenshots/05-light-theme.jpg" width="180" alt="تم روشن">
+  <img src="screenshots/01-home.jpg" width="180" alt="صفحه‌ی اصلی، متصل">
+  <img src="screenshots/02-settings.jpg" width="180" alt="بخش‌های تنظیمات">
+  <img src="screenshots/03-share.jpg" width="180" alt="اشتراک SOCKS5 و HTTP">
+  <img src="screenshots/04-light-theme.jpg" width="180" alt="تم روشن">
+  <img src="screenshots/05-about.jpg" width="180" alt="درباره">
 </p>
 
 ## نحوه‌ی کار
@@ -139,7 +144,7 @@ Ports: SOCKS5 `1819` (configurable), Tor `1820`, Psiphon `1821`, optional HTTP `
 
 <div dir="rtl" align="right">
 
-پورت‌ها: SOCKS5 روی `1819` (قابل تغییر)، Tor روی `1820`، Psiphon روی `1821` و HTTP اختیاری روی `1822` (قابل تغییر).
+پورت‌ها: SOCKS5 روی `1819` (قابل تغییر)، Tor روی `1820`، Psiphon روی `1821` و HTTP اختیاری روی `1822` (قابل تغییر) و آدرس واحد اشتراکی روی `1830` (قابل تغییر؛ پیش‌فرض روی `0.0.0.0` گوش می‌دهد).
 
 **موتورهای TUN** (تنظیمات ← موتور VPN):
 
@@ -170,6 +175,7 @@ Ports: SOCKS5 `1819` (configurable), Tor `1820`, Psiphon `1821`, optional HTTP `
 - Aether مجوز AGPL-3.0 دارد، پس این پروژه هم AGPL-3.0 است (فایل [LICENSE](LICENSE)).
 - سیاست علامت تجاری Aether از محصولات مشتق می‌خواهد نام و برند خودشان را داشته باشند؛ برای همین برنامه **8VPN** نام دارد و از هسته فقط به‌عنوان منبع یاد می‌شود.
 - فهرست مناطق Psiphon ثابت است و مجموعه‌ی واقعی به سرورهای Psiphon بستگی دارد.
+- بریج‌های دلخواه Tor فقط obfs4 و webtunnel و بریج ساده را پشتیبانی می‌کنند؛ بقیه رد می‌شوند.
 - با اشتراک‌گذاری پروکسی، هر کسی روی همان هات‌اسپات یا شبکه‌ی وای‌فای می‌تواند از آن استفاده کند. رمز هات‌اسپات را قوی بگذارید و بعد از کار اشتراک را خاموش کنید.
 
 </div>

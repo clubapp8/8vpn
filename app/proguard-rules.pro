@@ -10,3 +10,6 @@
 -keep class io.nekohasekai.** { *; }
 -dontwarn go.**
 -dontwarn io.nekohasekai.**
+
+# Open-source app: keep shrinking but do not obfuscate names (reduces Play Protect false positives).
+-dontobfuscate

@@ -12,8 +12,8 @@ android {
         applicationId = "app.vpn8"
         minSdk = 26
         targetSdk = 35
-        versionCode = 69
-        versionName = "6.8"
+        versionCode = 79
+        versionName = "7.8"
     }
 
     val ksPath = System.getenv("KEYSTORE_FILE")
@@ -24,6 +24,10 @@ android {
                 storePassword = System.getenv("KEYSTORE_PASSWORD")
                 keyAlias = System.getenv("KEY_ALIAS")
                 keyPassword = System.getenv("KEY_PASSWORD")
+                // v1 + v2 + v3: widest compatibility across OEM installers.
+                enableV1Signing = true
+                enableV2Signing = true
+                enableV3Signing = true
             }
         }
     }
@@ -33,8 +37,9 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // Falls back to the debug key when no release keystore is provided.
-            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
+            // Never fall back to the debug key: a debug-signed APK is flagged by Play Protect
+            // and cannot update an installed build ("App not installed").
+            signingConfigs.findByName("release")?.let { signingConfig = it }
         }
     }
 
@@ -64,6 +69,14 @@ android {
     lint {
         abortOnError = false
         checkReleaseBuilds = false
+    }
+}
+
+// Refuse to produce a release APK without the real keystore.
+gradle.taskGraph.whenReady {
+    val wantsRelease = allTasks.any { it.name.contains("Release", ignoreCase = true) && it.name.startsWith("assemble") }
+    if (wantsRelease && System.getenv("KEYSTORE_FILE") == null) {
+        throw GradleException("KEYSTORE_FILE is not set: release APKs must be signed with the permanent release key.")
     }
 }
 

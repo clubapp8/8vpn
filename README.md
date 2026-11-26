@@ -2,7 +2,7 @@
 
 <img src="banners/github-banner-en.png" alt="8 VPN" width="100%">
 
-**[English](#english) · [فارسی](#فارسی)**
+**[English](#english) · [فارسی](#فارسی) · [日本語](README.ja.md)**
 
 [![Telegram](https://img.shields.io/badge/Telegram-@Clubapp8-26A5E4?logo=telegram&logoColor=white)](https://t.me/Clubapp8)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
